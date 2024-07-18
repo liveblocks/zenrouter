@@ -1,7 +1,7 @@
 import { expectError, expectType } from "tsd";
 import { number, object, string } from "decoders";
 
-import { HttpError, Router, ValidationError } from "serv";
+import { HttpError, Router, ValidationError } from "zenrouter";
 
 declare const req: Request;
 

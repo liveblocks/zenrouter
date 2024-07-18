@@ -1,5 +1,5 @@
 import { expectType } from "tsd";
-import { Relay, Router } from "serv";
+import { Relay, Router } from "zenrouter";
 
 declare const req: Request;
 

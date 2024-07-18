@@ -1,12 +1,12 @@
-# `serv`
+# `zenrouter`
 
-`serv` is an opinionated router, with batteries included and encouraging
+`zenrouter` is an opinionated router, with batteries included and encouraging
 patterns that remain maintable over time as your application grows.
 
 ## Installation
 
 ```
-npm i serv
+npm i zenrouter
 ```
 
 ## Purpose
@@ -17,7 +17,7 @@ The main purpose of this router is to implement an API backend.
 
 ```ts
 import { object, string } from "decoders";
-import { Router } from "serv";
+import { Router } from "zenrouter";
 
 const app = new Router(/* ... */);
 
