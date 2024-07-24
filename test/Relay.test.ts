@@ -1,10 +1,12 @@
-import { Relay, Router } from "~";
+import { describe, expect, test } from "vitest";
+
+import { Relay, Router } from "~/index.js";
 import {
   captureConsole,
   disableConsole,
   expectResponse,
   fail,
-} from "~test/utils";
+} from "~test/utils.js";
 
 describe("Relay basic setup", () => {
   test("no configured relays", async () => {

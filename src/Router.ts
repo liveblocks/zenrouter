@@ -10,15 +10,15 @@ import type {
   MapReturnTypes,
   Matcher,
   Pattern,
-} from "~/lib/path-matcher";
-import { pathMatcher, splitMethodAndPattern } from "~/lib/path-matcher";
-import { mapv, raise } from "~/lib/utils";
-import type { HttpError } from "~/responses";
-import { abort, json, ValidationError } from "~/responses";
+} from "~/lib/path-matcher.js";
+import { pathMatcher, splitMethodAndPattern } from "~/lib/path-matcher.js";
+import { mapv, raise } from "~/lib/utils.js";
+import type { HttpError } from "~/responses/index.js";
+import { abort, json, ValidationError } from "~/responses/index.js";
 
-import { attachContext, lookupContext } from "./contexts";
-import type { ErrorHandlerFn } from "./ErrorHandler";
-import { ErrorHandler } from "./ErrorHandler";
+import { attachContext, lookupContext } from "./contexts.js";
+import type { ErrorHandlerFn } from "./ErrorHandler.js";
+import { ErrorHandler } from "./ErrorHandler.js";
 
 /**
  * An Incoming Request is what gets passed to every route handler. It includes

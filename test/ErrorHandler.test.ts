@@ -1,10 +1,15 @@
-import { vi } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-import { HttpError } from "~";
-import type { ErrorContext } from "~/ErrorHandler";
-import { ErrorHandler } from "~/ErrorHandler";
+import type { ErrorContext } from "~/ErrorHandler.js";
+import { ErrorHandler } from "~/ErrorHandler.js";
+import { HttpError } from "~/index.js";
 
-import { captureConsole, disableConsole, expectResponse, fail } from "./utils";
+import {
+  captureConsole,
+  disableConsole,
+  expectResponse,
+  fail,
+} from "./utils.js";
 
 class CustomHttpError extends HttpError {
   constructor() {

@@ -1,4 +1,4 @@
-import { raise } from "~/lib/utils";
+import { raise } from "~/lib/utils.js";
 
 export class HttpError extends Error {
   static readonly codes: { [code: number]: string | undefined } = {

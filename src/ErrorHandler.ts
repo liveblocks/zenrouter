@@ -1,5 +1,5 @@
-import { raise } from "~/lib/utils";
-import { HttpError, json } from "~/responses";
+import { raise } from "~/lib/utils.js";
+import { HttpError, json } from "~/responses/index.js";
 
 export type ErrorContext<RC> = {
   req: Request;

@@ -32,8 +32,8 @@
     "format": "eslint --color --fix src/ test/; prettier --write src/ test/",
     "lint": "eslint --color src/ test/",
     "lint:package": "publint --strict && attw --pack",
-    "test": "vitest run --color --reporter=basic",
-    "test:watch": "vitest --color --reporter=basic",
+    "test": "vitest run --color",
+    "test:watch": "vitest watch --color",
     "test:types": "tsd"
   },
   "license": "Apache-2.0",

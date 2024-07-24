@@ -1,4 +1,6 @@
-import { HttpError, ValidationError } from "~/responses";
+import { describe, expect, test } from "vitest";
+
+import { HttpError, ValidationError } from "~/responses/index.js";
 
 describe("HttpError", () => {
   test("construct custom http errors", () => {

@@ -1,6 +1,6 @@
 import type { JsonObject } from "@liveblocks/core";
 
-import { HttpError, ValidationError } from "./HttpError";
+import { HttpError, ValidationError } from "./HttpError.js";
 
 /**
  * Returns an empty HTTP 204 response.

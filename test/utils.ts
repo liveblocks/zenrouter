@@ -1,5 +1,5 @@
 import type { Json } from "@liveblocks/core";
-import { onTestFinished, vi } from "vitest";
+import { expect, onTestFinished, vi } from "vitest";
 
 export function fail(): never {
   throw new Error("I should not get invoked");

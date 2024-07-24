@@ -1,6 +1,7 @@
 import * as fc from "fast-check";
+import { describe, expect, test } from "vitest";
 
-import { pathMatcher } from "~/lib/path-matcher";
+import { pathMatcher } from "~/lib/path-matcher.js";
 
 function _(pathname: string, base = "https://example.com") {
   return new URL(pathname, base);

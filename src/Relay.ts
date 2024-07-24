@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { raise } from "~/lib/utils";
-import { abort } from "~/responses";
-import type { Router } from "~/Router";
+import { raise } from "~/lib/utils.js";
+import { abort } from "~/responses/index.js";
+import type { Router } from "~/Router.js";
 
-import { lookupContext } from "./contexts";
-import { ErrorHandler } from "./ErrorHandler";
+import { lookupContext } from "./contexts.js";
+import { ErrorHandler } from "./ErrorHandler.js";
 
 const prefixRegExp = /^(\/[\w-]+)+$/;
 

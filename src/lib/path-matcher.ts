@@ -9,7 +9,7 @@ import type {
   Unions,
 } from "hotscript";
 
-import { raise } from "./utils";
+import { raise } from "./utils.js";
 
 const cleanSegmentRe = /^[\w-]+$/;
 const identifierRe = /^[a-z]\w*$/;

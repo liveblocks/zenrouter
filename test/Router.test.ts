@@ -1,9 +1,10 @@
 import type { JsonObject } from "@liveblocks/core";
 import { number, object } from "decoders";
+import { describe, expect, test } from "vitest";
 
-import { HttpError, json, Router } from "~";
-import { ErrorHandler } from "~/ErrorHandler";
-import { captureConsole, expectResponse, fail } from "~test/utils";
+import { ErrorHandler } from "~/ErrorHandler.js";
+import { HttpError, json, Router } from "~/index.js";
+import { captureConsole, expectResponse, fail } from "~test/utils.js";
 
 function ok(value: JsonObject): Response {
   return new Response(JSON.stringify(value, null, 2), {
