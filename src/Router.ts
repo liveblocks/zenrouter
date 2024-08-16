@@ -26,30 +26,37 @@ import { ErrorHandler } from "./ErrorHandler.js";
  * URL, the type-safe params `p`, the parsed query string `q`, and a verified
  * JSON body (if a decoder is provided).
  */
-type IncomingReq<RC, TParams, TBody> = {
+type IncomingReq<RC, AC, TParams, TBody> = {
   /**
    * The incoming request.
    */
-  req: Request;
+  readonly req: Request;
   /**
    * The incoming request parsed URL.
    * This is equivalent to the result of `new URL(req.url)`.
    */
-  url: URL;
+  readonly url: URL;
   /**
-   * The user-defined context associated with this request. This is the best
-   * place to attach metadata you want to carry around along with the request,
-   * without having to monkey-patch the request instance.
+   * The user-defined static context associated with this request. This is the
+   * best place to attach metadata you want to carry around along with the
+   * request, without having to monkey-patch the request instance.
+   *
+   * Use this context for static metadata. Do not use it for auth.
    *
    * Basically the result of calling the configured `getContext()` function on
    * the request.
    */
-  ctx: RC;
+  readonly ctx: Readonly<RC>;
+  /**
+   * The result of the authorization check for this request. Basically the
+   * result of calling the configured `authorize()` function on the request.
+   */
+  readonly auth: Readonly<AC>;
   /**
    * The type-safe params available for this request. Automatically derived
    * from dynamic placeholders in the pattern.
    */
-  p: TParams;
+  readonly p: TParams;
   /**
    * Convenience accessor for the parsed query string.
    * Equivalent to `Object.entries(url.searchParams)`.
@@ -58,11 +65,11 @@ type IncomingReq<RC, TParams, TBody> = {
    * times. If you need to read all of them, use the `url.searchParams` API
    * instead.
    */
-  q: Record<string, string | undefined>;
+  readonly q: Record<string, string | undefined>;
   /**
    * Verified JSON body for this request, if a decoder instance was provided.
    */
-  body: TBody;
+  readonly body: TBody;
 };
 
 /**
@@ -70,9 +77,9 @@ type IncomingReq<RC, TParams, TBody> = {
  * deliberately limited until after a successful auth check. Only once the
  * request has been authorized, further parsing will happen.
  */
-type LimitedIncomingReq<RC> = Omit<
-  IncomingReq<RC, never, never>,
-  "p" | "q" | "body"
+type PreAuthIncomingReq<RC> = Omit<
+  IncomingReq<Readonly<RC>, never, never, never>,
+  "auth" | "p" | "q" | "body"
 >;
 
 /**
@@ -85,27 +92,28 @@ type ResponseLike = Promise<Response | JsonObject> | Response | JsonObject;
 //   input: IncomingReq<R, RC, TParams>
 // ) => boolean;
 
-type RouteHandler<RC, TParams, TBody> = (
-  input: IncomingReq<RC, TParams, TBody>
+type RouteHandler<RC, AC, TParams, TBody> = (
+  input: IncomingReq<RC, AC, TParams, TBody>
 ) => ResponseLike;
 
-type RouteTuple<RC> = readonly [
+type RouteTuple<RC, AC> = readonly [
   pattern: Pattern,
   matcher: Matcher,
-  auth: AuthFn<RC>,
+  auth: AuthFn<RC, AC>,
   bodyDecoder: Decoder<unknown> | null,
-  handler: OpaqueRouteHandler<RC>,
+  handler: OpaqueRouteHandler<RC, AC>,
 ];
 
 type RouterOptions<
   RC,
+  AC,
   TParams extends Record<string, (input: string) => unknown>,
 > = {
   errorHandler?: ErrorHandler;
 
   // Mandatory config
   getContext?: (req: Request, ...args: readonly any[]) => RC;
-  authorize?: AuthFn<RC>;
+  authorize?: AuthFn<RC, AC>;
 
   // Register any param decoders
   params?: TParams;
@@ -114,28 +122,29 @@ type RouterOptions<
   debug?: boolean;
 };
 
-export type AuthFn<RC> = (
-  input: LimitedIncomingReq<RC>
-) => boolean | Promise<boolean>;
+export type AuthFn<RC, AC> = (
+  input: PreAuthIncomingReq<RC>
+) => AC | Promise<AC>;
 
-type OpaqueRouteHandler<RC> = (
-  input: IncomingReq<RC, OpaqueParams, unknown>
+type OpaqueRouteHandler<RC, AC> = (
+  input: IncomingReq<RC, AC, OpaqueParams, unknown>
 ) => Promise<Response>;
 
 type OpaqueParams = Record<string, unknown>;
 
 export class Router<
-  RC = null,
+  RC,
+  AC,
   TParams extends Record<string, (input: string) => unknown> = {},
 > {
   #_debug: boolean;
   #_contextFn: (req: Request, ...args: readonly any[]) => RC;
-  #_defaultAuthFn: AuthFn<RC>;
-  #_routes: RouteTuple<RC>[];
+  #_defaultAuthFn: AuthFn<RC, AC>;
+  #_routes: RouteTuple<RC, AC>[];
   #_paramDecoders: TParams;
   #_errorHandler: ErrorHandler;
 
-  constructor(options?: RouterOptions<RC, TParams>) {
+  constructor(options?: RouterOptions<RC, AC, TParams>) {
     this.#_errorHandler = options?.errorHandler ?? new ErrorHandler();
     this.#_debug = options?.debug ?? false;
     this.#_contextFn = options?.getContext ?? (() => null as any as RC);
@@ -144,7 +153,7 @@ export class Router<
       (() => {
         // TODO "...or specify an authorize function in this specific endpoint definition"
         console.error("This request was not checked for authorization. Please configure a generic `authorize` function in the Router constructor."); // prettier-ignore
-        return Promise.resolve(false);
+        return abort(403);
       });
     this.#_routes = [];
     this.#_paramDecoders = options?.params ?? ({} as TParams);
@@ -164,12 +173,22 @@ export class Router<
 
   public route<P extends Pattern>(
     pattern: P,
-    handler: RouteHandler<RC, ExtractParams<P, MapReturnTypes<TParams>>, never>
+    handler: RouteHandler<
+      RC,
+      AC,
+      ExtractParams<P, MapReturnTypes<TParams>>,
+      never
+    >
   ): void;
   public route<P extends Pattern, TBody>(
     pattern: P,
     bodyDecoder: Decoder<TBody>,
-    handler: RouteHandler<RC, ExtractParams<P, MapReturnTypes<TParams>>, TBody>
+    handler: RouteHandler<
+      RC,
+      AC,
+      ExtractParams<P, MapReturnTypes<TParams>>,
+      TBody
+    >
   ): void;
   /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
   /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -182,7 +201,7 @@ export class Router<
     this.#_register(
       pattern,
       bodyDecoder,
-      handler as RouteHandler<RC, OpaqueParams, unknown>
+      handler as RouteHandler<RC, AC, OpaqueParams, unknown>
     );
   }
 
@@ -230,7 +249,7 @@ export class Router<
   #_register<P extends Pattern>(
     pattern: P,
     bodyDecoder: Decoder<unknown> | null,
-    handler: RouteHandler<RC, OpaqueParams, unknown>
+    handler: RouteHandler<RC, AC, OpaqueParams, unknown>
     // authFn?: OpaqueAuthFn<RC>
   ): void {
     const matcher = pathMatcher(pattern);
@@ -306,7 +325,8 @@ export class Router<
         };
 
         // Perform auth
-        if (!(await authorize(base))) {
+        const auth = await authorize(base);
+        if (!auth) {
           return abort(403);
         }
 
@@ -343,6 +363,7 @@ export class Router<
         // Decode the body
         const input = {
           ...base,
+          auth,
           p,
           q: Object.fromEntries(url.searchParams),
           get body() {
@@ -370,9 +391,9 @@ export class Router<
  * Helper to handle any endpoint handlers returning a JSON object, and turning
  * that into a 200 response if so.
  */
-function wrap<RC>(
-  handler: RouteHandler<RC, OpaqueParams, unknown>
-): OpaqueRouteHandler<RC> {
+function wrap<RC, AC>(
+  handler: RouteHandler<RC, AC, OpaqueParams, unknown>
+): OpaqueRouteHandler<RC, AC> {
   return async (input) => {
     const result = await handler(input);
     if (result instanceof Response) {

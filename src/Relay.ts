@@ -39,7 +39,10 @@ export class Relay {
     return this.#_tryDispatch.bind(this);
   }
 
-  public relay(staticPrefix: `/${string}`, router: Router<any, any>): this {
+  public relay(
+    staticPrefix: `/${string}`,
+    router: Router<any, any, any>
+  ): this {
     prefixRegExp.test(staticPrefix) || raise(`Invalid static path prefix: ${staticPrefix}`); // prettier-ignore
 
     const mismatch = router.findMismatch(staticPrefix);

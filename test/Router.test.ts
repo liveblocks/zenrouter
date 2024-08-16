@@ -40,7 +40,7 @@ describe("starting from scratch gives guided experience", () => {
 describe("Router setup errors", () => {
   test("default context is null when not specified", async () => {
     const r = simplestRouter();
-    r.route("GET /", ({ ctx }) => ok({ ctx }));
+    r.route("GET /", ({ ctx }) => ok({ ctx } as any));
 
     const req = new Request("http://example.org/");
     const resp = await r.fetch(req);
@@ -51,7 +51,7 @@ describe("Router setup errors", () => {
     const konsole = captureConsole();
 
     const r = new Router();
-    r.route("GET /", ({ ctx }) => ok({ ctx }));
+    r.route("GET /", ({ ctx }) => ok({ ctx } as any));
 
     const req = new Request("http://example.org/");
     const resp = await r.fetch(req);
@@ -258,6 +258,54 @@ describe("Router", () => {
     const req = new Request("http://example.org/custom-http-error");
     const resp = await r.fetch(req);
     await expectResponse(resp, { error: "Custom Error" }, 488);
+  });
+});
+
+describe("Router authentication", () => {
+  test("Authorized when returning truthy value", async () => {
+    const r = new Router({
+      authorize: ({ req }) => {
+        return req.headers.get("Authorization") === "v3ry-s3cr3t!";
+      },
+    });
+
+    r.route("GET /", () => ok({ ok: true }));
+
+    const req1 = new Request("http://example.org/");
+    await expectResponse(await r.fetch(req1), { error: "Forbidden" }, 403);
+
+    const req2 = new Request("http://example.org/", {
+      headers: { Authorization: "v3ry-s3cr3t!" },
+    });
+    await expectResponse(await r.fetch(req2), { ok: true });
+  });
+
+  test("Returning parsed auth data", async () => {
+    const r = new Router({
+      authorize: ({ req }) => {
+        const header = req.headers.get("Authorization");
+        if (!header?.startsWith("v3ry-s3cr3t!")) {
+          return false;
+        }
+
+        return { userId: header.substring("v3ry-s3cr3t!".length).trim() };
+      },
+    });
+
+    r.route("GET /", ({ auth }) => ok({ auth }));
+
+    const req1 = new Request("http://example.org/");
+    await expectResponse(await r.fetch(req1), { error: "Forbidden" }, 403);
+
+    const req2 = new Request("http://example.org/", {
+      headers: { Authorization: "v3ry-s3cr3t! user-123" },
+    });
+    await expectResponse(await r.fetch(req2), { auth: { userId: "user-123" } });
+
+    const req3 = new Request("http://example.org/", {
+      headers: { Authorization: "v3ry-s3cr3t! user-456" },
+    });
+    await expectResponse(await r.fetch(req3), { auth: { userId: "user-456" } });
   });
 });
 

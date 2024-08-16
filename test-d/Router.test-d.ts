@@ -9,7 +9,7 @@ async () => {
   const app = new Router();
 
   app.route("GET /<foo>", ({ ctx, p }) => {
-    expectType<null>(ctx);
+    expectType<Readonly<unknown>>(ctx);
     expectType<string>(p.foo);
     fail("no implementation");
   });
@@ -27,6 +27,41 @@ async () => {
     expectType<string>(ctx.hello); // "world"
     expectType<string>(ctx.request.url);
     expectType<readonly any[]>(ctx.args);
+    fail("no implementation");
+  });
+};
+
+// With a authorize() function
+async () => {
+  const app = new Router({
+    authorize: ({ ctx }) => ({
+      userId: "user-123",
+      passThrough: { ctx },
+    }),
+  });
+
+  app.route("GET /", ({ ctx, auth }) => {
+    expectType<Readonly<unknown>>(ctx);
+    expectType<Readonly<unknown>>(auth.passThrough.ctx); // same thing
+    expectType<string>(auth.userId); // "user-123"
+    fail("no implementation");
+  });
+};
+
+// With a getContext() + authorize() function
+async () => {
+  const app = new Router({
+    getContext: () => ({ abc: 123 }),
+    authorize: ({ ctx }) => ({
+      userId: "user-456",
+      passThrough: { ctx },
+    }),
+  });
+
+  app.route("GET /", ({ ctx, auth }) => {
+    expectType<Readonly<{ abc: number }>>(ctx);
+    expectType<Readonly<{ abc: number }>>(auth.passThrough.ctx); // same thing
+    expectType<string>(auth.userId); // "user-456"
     fail("no implementation");
   });
 };
