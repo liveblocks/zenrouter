@@ -3,7 +3,7 @@
 
 import { raise } from "~/lib/utils.js";
 import { abort } from "~/responses/index.js";
-import type { Router } from "~/Router.js";
+import { Router } from "~/Router.js";
 
 import { lookupContext } from "./contexts.js";
 import { ErrorHandler } from "./ErrorHandler.js";
@@ -41,20 +41,35 @@ export class Relay {
 
   public relay(
     staticPrefix: `/${string}`,
-    router: Router<any, any, any>
+    router:
+      | Router<any, any, any>
+      //
+      // NOTE: "RequestHandler" here is only allowed here to allow passing an
+      // IttyRouter.handle instance here directly. Itty router is not built with
+      // the same concepts as Zenrouter in mind (for example, it can return
+      // `undefined` instead of a Response to trigger a fallthrough). Overall,
+      // it's better to remove this again once we're done refactoring away all
+      // instances of Itty router.
+      | RequestHandler
   ): this {
     prefixRegExp.test(staticPrefix) || raise(`Invalid static path prefix: ${staticPrefix}`); // prettier-ignore
 
-    const mismatch = router.findMismatch(staticPrefix);
-    if (mismatch !== null) {
-      console.warn(
-        `Warning: router supposed to handle prefix '${staticPrefix}' has route that will never match: '${mismatch}'`
-      );
+    // Perform sanity check if this is a Router instance
+    if (router instanceof Router) {
+      const mismatch = router.findMismatch(staticPrefix);
+      if (mismatch !== null) {
+        console.warn(
+          `Warning: router supposed to handle prefix '${staticPrefix}' has route that will never match: '${mismatch}'`
+        );
+      }
     }
 
     // Register the prefix matcher
     const prefixMatcher = new RegExp(`^${staticPrefix}(/|$)`);
-    this.#_routers.push([prefixMatcher, router.fetch]);
+    this.#_routers.push([
+      prefixMatcher,
+      router instanceof Router ? router.fetch : router,
+    ]);
     return this; // Allow chaining
   }
 

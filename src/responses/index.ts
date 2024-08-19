@@ -12,9 +12,10 @@ export function empty(): Response {
 /**
  * Return a JSON response.
  */
-export function json(value: JsonObject, status: number): Response {
+export function json(value: JsonObject, status = 200): Response {
   return new Response(JSON.stringify(value), {
     status,
+    // TODO: Allow passing ResponseInit options, like extra response headers?
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 }
