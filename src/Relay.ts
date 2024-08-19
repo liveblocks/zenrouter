@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { raise } from "~/lib/utils.js";
-import { abort } from "~/responses/index.js";
+import { abort, HttpError } from "~/responses/index.js";
 import { Router } from "~/Router.js";
 
 import { lookupContext } from "./contexts.js";
@@ -80,9 +80,13 @@ export class Relay {
     try {
       return await this.#_dispatch(req, ...args);
     } catch (err) {
-      // Unexpected, this should never happen
-      // TODO Verify... is this indeed never happening? Also not when a 404 is thrown below in #_dispatch?
-      console.error(`Relayer caught error in subrouter! This should never happen, as routers should never throw an unexpected error! ${String(err)}`); // prettier-ignore
+      if (!(err instanceof HttpError || err instanceof Response)) {
+        // This case is definitely unexpected, it should never happen when
+        // you're using only Relay or Router instances. However, it *can*
+        // happen if the handler is a custom function (e.g. you're deferring to
+        // itty-router), then this is not guaranteed.
+        console.error(`Relayer caught error in subrouter! This should never happen, as routers should never throw an unexpected error! ${String(err)}`); // prettier-ignore
+      }
       return this.#_errorHandler.handle(err, {
         req,
         ctx: lookupContext(req),
@@ -98,7 +102,7 @@ export class Relay {
       }
     }
 
-    console.warn(`Relayer does not know how to handle requested path: ${path}`); // prettier-ignore
+    console.warn(`Relayer did not know how to handle requested path: ${path}`); // prettier-ignore
     return abort(404);
   }
 }

@@ -224,10 +224,10 @@ export class Router<
 
   public onError(
     handler: ErrorHandlerFn<HttpError | ValidationError, RC>
+    //                                  ^^^^^^^^^^^^^^^
+    //                                  Technically this isn't needed, because it is a subclass of
+    //                                  HttpError already, but adding it here anyway for clarity.
   ): this {
-    //                                               ^^^^^^^^^^^^^^^
-    //                                               Technically this isn't needed, because it is a subclass of
-    //                                               HttpError already, but adding it here anyway for clarity.
     this.#_errorHandler.onError(handler as ErrorHandlerFn<unknown>);
     return this;
   }
