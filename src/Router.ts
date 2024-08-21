@@ -8,10 +8,10 @@ import { formatShort } from "decoders";
 import type {
   ExtractParams,
   MapReturnTypes,
-  Matcher,
   Pattern,
-} from "~/lib/path-matcher.js";
-import { pathMatcher, splitMethodAndPattern } from "~/lib/path-matcher.js";
+  RouteMatcher,
+} from "~/lib/matchers.js";
+import { routeMatcher } from "~/lib/matchers.js";
 import { mapv, raise } from "~/lib/utils.js";
 import type { HttpError } from "~/responses/index.js";
 import { abort, json, ValidationError } from "~/responses/index.js";
@@ -98,7 +98,7 @@ type RouteHandler<RC, AC, TParams, TBody> = (
 
 type RouteTuple<RC, AC> = readonly [
   pattern: Pattern,
-  matcher: Matcher,
+  matcher: RouteMatcher,
   auth: AuthFn<RC, AC>,
   bodyDecoder: Decoder<unknown> | null,
   handler: OpaqueRouteHandler<RC, AC>,
@@ -205,18 +205,6 @@ export class Router<
     );
   }
 
-  public findMismatch(prefix: `/${string}`): string | null {
-    prefix = prefix.endsWith("/") ? prefix : ((prefix + "/") as `/${string}`);
-    for (const [pat] of this.#_routes) {
-      let [, path] = splitMethodAndPattern(pat);
-      path = path.endsWith("/") ? path : path + "/";
-      if (!path.startsWith(prefix)) {
-        return pat;
-      }
-    }
-    return null;
-  }
-
   public onUncaughtError(handler: ErrorHandlerFn<unknown, RC>): this {
     this.#_errorHandler.onUncaughtError(handler as ErrorHandlerFn<unknown>);
     return this;
@@ -252,7 +240,7 @@ export class Router<
     handler: RouteHandler<RC, AC, OpaqueParams, unknown>
     // authFn?: OpaqueAuthFn<RC>
   ): void {
-    const matcher = pathMatcher(pattern);
+    const matcher = routeMatcher(pattern);
     this.#_routes.push([
       pattern,
       matcher,

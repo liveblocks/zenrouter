@@ -1,8 +1,14 @@
 import type { Json } from "@liveblocks/core";
 import { expect, onTestFinished, vi } from "vitest";
 
+import { json } from "~/index.js";
+
 export function fail(): never {
   throw new Error("I should not get invoked");
+}
+
+export function ok(message: string) {
+  return () => json({ message }, 200);
 }
 
 export async function expectResponse(

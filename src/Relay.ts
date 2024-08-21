@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
-import { raise } from "~/lib/utils.js";
 import { abort, HttpError } from "~/responses/index.js";
 import { Router } from "~/Router.js";
 
 import { lookupContext } from "./contexts.js";
 import { ErrorHandler } from "./ErrorHandler.js";
-
-const prefixRegExp = /^(\/[\w-]+)+$/;
+import type { PathPrefix } from "./lib/matchers.js";
+import { makePrefixPathMatcher } from "./lib/matchers.js";
 
 type RequestHandler = (
   req: Request,
@@ -20,9 +19,18 @@ type RelayOptions = {
 };
 
 /**
- * Relay won't do any route handling itself. It will just try to hand-off any
- * incoming request to one of the configured routers. It will return a generic
- * 404 in case no configured prefix matches.
+ * Relay won't do any route handling itself. It will only hand-off any incoming
+ * request to one of the configured routers, based on the incoming request path
+ * (first matching prefix path wins).
+ *
+ * It does NOT check the HTTP verb (GET, POST, etc).
+ * It does NOT do any authentication.
+ * It does NOT look at any headers.
+ *
+ * Subrouters (typically Router instances) are responsible for all that
+ * themselves.
+ *
+ * If no matching route is found, it will return a generic 404 error response.
  */
 export class Relay {
   #_errorHandler: ErrorHandler;
@@ -40,7 +48,7 @@ export class Relay {
   }
 
   public relay(
-    staticPrefix: `/${string}`,
+    prefix: PathPrefix,
     router:
       | Router<any, any, any>
       //
@@ -52,20 +60,7 @@ export class Relay {
       // instances of Itty router.
       | RequestHandler
   ): this {
-    prefixRegExp.test(staticPrefix) || raise(`Invalid static path prefix: ${staticPrefix}`); // prettier-ignore
-
-    // Perform sanity check if this is a Router instance
-    if (router instanceof Router) {
-      const mismatch = router.findMismatch(staticPrefix);
-      if (mismatch !== null) {
-        console.warn(
-          `Warning: router supposed to handle prefix '${staticPrefix}' has route that will never match: '${mismatch}'`
-        );
-      }
-    }
-
-    // Register the prefix matcher
-    const prefixMatcher = new RegExp(`^${staticPrefix}(/|$)`);
+    const prefixMatcher = makePrefixPathMatcher(prefix);
     this.#_routers.push([
       prefixMatcher,
       router instanceof Router ? router.fetch : router,

@@ -5,10 +5,12 @@ import {
   captureConsole,
   disableConsole,
   expectResponse,
-  fail,
+  ok,
 } from "~test/utils.js";
 
-const IGNORE_AUTH_FOR_THIS_TEST = () => Promise.resolve(true);
+const WITHOUT_AUTH = {
+  authorize: () => Promise.resolve(true),
+};
 
 describe("Relay basic setup", () => {
   test("no configured relays", async () => {
@@ -23,11 +25,11 @@ describe("Relay basic setup", () => {
   test("unused prefixes", async () => {
     disableConsole();
 
-    const foo = new Router();
-    foo.route("POST /foo/bar", fail);
+    const foo = new Router(WITHOUT_AUTH);
+    foo.route("GET /foo/bar", ok("From bar"));
 
     const relay = new Relay();
-    relay.relay("/foo", foo);
+    relay.relay("/foo/*", foo);
 
     {
       const req = new Request("http://example.org/");
@@ -50,7 +52,205 @@ describe("Relay basic setup", () => {
     {
       const req = new Request("http://example.org/foo/bar");
       const resp = await relay.fetch(req);
-      await expectResponse(resp, { error: "Method Not Allowed" }, 405); // thrown by Router, not by Relay!
+      await expectResponse(resp, { message: "From bar" });
+    }
+  });
+
+  test("dynamic placeholders #1", async () => {
+    disableConsole();
+
+    const foo = new Router(WITHOUT_AUTH);
+    foo.route("GET /foo/bar", ok("From bar"));
+    foo.route("GET /foo/qux/hello", ok("From hello"));
+    foo.route("GET /foo/baz/mutt", ok("From mutt"));
+
+    const relay = new Relay();
+    relay.relay("/foo/<abc>/*", foo);
+
+    {
+      const req = new Request("http://example.org/");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Router, not by Relay!
+    }
+
+    {
+      const req = new Request("http://example.org/foo/");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Router, not by Relay!
+    }
+
+    {
+      const req = new Request("http://example.org/foo/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From bar" });
+    }
+
+    {
+      const req = new Request("http://example.org/foo/bar/");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From bar" });
+    }
+  });
+
+  test("dynamic placeholders #2", async () => {
+    disableConsole();
+
+    const foo = new Router(WITHOUT_AUTH);
+    foo.route("GET /foo/bar", ok("From bar"));
+    foo.route("GET /foo/qux/hello", ok("From hello"));
+    foo.route("GET /foo/baz/mutt", ok("From mutt"));
+
+    const relay = new Relay();
+    relay.relay("/<abc>/baz/*", foo);
+
+    {
+      const req = new Request("http://example.org/");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo/baz/mutt");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From mutt" });
+    }
+  });
+
+  test("catchalls", async () => {
+    disableConsole();
+
+    const foo = new Router(WITHOUT_AUTH);
+    foo.route("GET /foo/bar", ok("From router 1"));
+
+    const bar = new Router(WITHOUT_AUTH);
+    bar.route("GET /bar/baz", ok("From router 2"));
+
+    const qux = new Router(WITHOUT_AUTH);
+    qux.route("GET /qux/mutt", ok("From router 3"));
+
+    const relay = new Relay();
+    relay.relay("/foo/*", foo);
+    relay.relay("/bar/*", bar);
+    relay.relay("/*", qux);
+
+    {
+      const req = new Request("http://example.org/");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From router 1" });
+    }
+
+    {
+      const req = new Request("http://example.org/bar/baz");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From router 2" });
+    }
+
+    {
+      const req = new Request("http://example.org/qux/mutt");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From router 3" });
+    }
+
+    {
+      const req = new Request("http://example.org/foo/i-do-not-exist");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // From router 1
+    }
+
+    {
+      const req = new Request("http://example.org/bar/i-do-not-exist");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // From router 2
+    }
+
+    {
+      const req = new Request("http://example.org/qux/i-do-not-exist");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // From router 3
+    }
+  });
+
+  test("catchalls (order matters)", async () => {
+    disableConsole();
+
+    const foo = new Router(WITHOUT_AUTH);
+    foo.route("GET /foo/bar", ok("From router 1"));
+
+    const bar = new Router(WITHOUT_AUTH);
+    bar.route("GET /bar/baz", ok("From router 2"));
+
+    const qux = new Router(WITHOUT_AUTH);
+    qux.route("GET /qux/mutt", ok("From router 3"));
+
+    const relay = new Relay();
+    relay.relay("/*", qux); // 🔑 NOTE: Catchall defined before all other routes!
+    relay.relay("/foo/*", foo);
+    relay.relay("/bar/*", bar);
+
+    {
+      const req = new Request("http://example.org/");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Relay
+    }
+
+    {
+      const req = new Request("http://example.org/foo/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // From router 3
+    }
+
+    {
+      const req = new Request("http://example.org/bar/baz");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // From router 3
+    }
+
+    {
+      const req = new Request("http://example.org/qux/mutt");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From router 3" });
     }
   });
 });
@@ -59,35 +259,28 @@ describe("Misconfigured Relay instance", () => {
   test("invalid match prefix #1", () => {
     const relay = new Relay();
     expect(() => relay.relay("GET /foo" as any, new Router())).toThrow(
-      "Invalid static path prefix: GET /foo"
+      "Invalid path prefix: GET /foo"
     );
   });
 
   test("invalid match prefix #2", () => {
     const relay = new Relay();
     expect(() => relay.relay("/foo /bar" as any, new Router())).toThrow(
-      "Invalid static path prefix: /foo /bar"
+      "Invalid path prefix: /foo /bar"
     );
   });
 
   test("invalid match prefix #3", () => {
     const relay = new Relay();
-    expect(() => relay.relay("/<foo>" as any, new Router())).toThrow(
-      "Invalid static path prefix: /<foo>"
+    expect(() => relay.relay("/foo" as any, new Router())).toThrow(
+      "Invalid path prefix: /foo"
     );
   });
 
-  test("assigning a router that won't be able to handle a prefix is considered a misconfiguration", () => {
-    const konsole = captureConsole();
-
-    const foo = new Router();
-    foo.route("GET /foo", fail);
-
+  test("invalid match prefix #4", () => {
     const relay = new Relay();
-    relay.relay("/bar", foo);
-
-    expect(konsole.warn).toHaveBeenCalledWith(
-      "Warning: router supposed to handle prefix '/bar' has route that will never match: 'GET /foo'"
+    expect(() => relay.relay("/foo*" as any, new Router())).toThrow(
+      "Invalid path prefix: /foo*"
     );
   });
 });
@@ -95,15 +288,13 @@ describe("Misconfigured Relay instance", () => {
 describe("Error handling behavior", () => {
   test("aborting vs throwing custom error (which remains uncaught)", async () => {
     const konsole = captureConsole();
-    const router = new Router({
-      authorize: IGNORE_AUTH_FOR_THIS_TEST,
-    });
+    const router = new Router(WITHOUT_AUTH);
     router.route("GET /test/403", () => abort(403));
     router.route("GET /test/oops", () => {
       throw new Error("Oops");
     });
 
-    const relay = new Relay().relay("/test", router);
+    const relay = new Relay().relay("/test/*", router);
 
     {
       const req = new Request("http://example.org/test/403");
@@ -128,9 +319,7 @@ describe("Error handling behavior", () => {
 
   test("same, but now uncaught handler is defined (at the Router level)", async () => {
     const konsole = captureConsole();
-    const router = new Router({
-      authorize: IGNORE_AUTH_FOR_THIS_TEST,
-    });
+    const router = new Router(WITHOUT_AUTH);
     router.onUncaughtError(() => json({ custom: "error" }, 500));
 
     router.route("GET /test/403", () => abort(403));
@@ -138,7 +327,7 @@ describe("Error handling behavior", () => {
       throw new Error("Oops");
     });
 
-    const relay = new Relay().relay("/test", router);
+    const relay = new Relay().relay("/test/*", router);
 
     {
       const req = new Request("http://example.org/test/403");
@@ -159,7 +348,7 @@ describe("Error handling behavior", () => {
 
   test("same, but now there is no Router (we're using a custom handler function) #1", async () => {
     const app = new Relay().relay(
-      "/oops",
+      "/oops/*",
       // NOTE! *Not* using a Router instance here, instead using a custom
       // handler function directly! This is NOT recommended, but currently
       // supported only to allow using itty-router here!
@@ -183,7 +372,7 @@ describe("Error handling behavior", () => {
 
   test("same, but now there is no Router (we're using a custom handler function) #2", async () => {
     const app = new Relay().relay(
-      "/oops",
+      "/oops/*",
       // NOTE! *Not* using a Router instance here, instead using a custom
       // handler function directly! This is NOT recommended, but currently
       // supported only to allow using itty-router here!

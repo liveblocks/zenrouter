@@ -13,10 +13,12 @@ import { raise } from "./utils.js";
 
 const cleanSegmentRe = /^[\w-]+$/;
 const identifierRe = /^[a-z]\w*$/;
+const pathPrefixRegex = /^\/(([\w-]+|<[\w-]+>)\/)*\*$/;
 
 export type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
 export type PathPattern = `/${string}`;
 export type Pattern = `${Method} ${PathPattern}`;
+export type PathPrefix = `/${string}/*` | "/*";
 
 /**
  * From a pattern like:
@@ -91,24 +93,9 @@ export type ExtractParams<
 
 const ALL: Method[] = ["GET", "POST", "PATCH", "PUT", "DELETE"];
 
-export interface Matcher {
+export interface RouteMatcher {
   matchMethod(req: { method?: string }): boolean;
   matchURL(url: URL): Record<string, string> | null;
-}
-
-function makeMatcher(method: Method, regex: RegExp): Matcher {
-  return {
-    matchMethod(req: Request): boolean {
-      return method === req.method;
-    },
-    matchURL(url: URL) {
-      const matches = url.pathname.match(regex);
-      if (matches === null) {
-        return null;
-      }
-      return matches.groups ?? {};
-    },
-  };
 }
 
 function segmentAsVariable(s: string): string | null {
@@ -119,7 +106,7 @@ function segmentAsVariable(s: string): string | null {
   return null;
 }
 
-export function splitMethodAndPattern(
+function splitMethodAndPattern(
   pattern: string
 ): [method: Method, pattern: string] {
   for (const method of ALL) {
@@ -136,11 +123,10 @@ export function splitMethodAndPattern(
   );
 }
 
-export function pathMatcher(input: string): Matcher {
-  const [method, pattern] = splitMethodAndPattern(input);
-
+function makePathMatcher(pattern: string, options: { exact: boolean }): RegExp {
+  const exact = options.exact ?? true;
   if (pattern === "/") {
-    return makeMatcher(method, /^\/$/);
+    return exact ? /^\/$/ : /^\//;
   }
 
   if (!pattern.startsWith("/")) {
@@ -172,5 +158,31 @@ export function pathMatcher(input: string): Matcher {
     index += segment.length + 1;
   }
 
-  return makeMatcher(method, new RegExp("^/" + regexString.join("/") + "/?$"));
+  return new RegExp("^/" + regexString.join("/") + "/?" + (exact ? "$" : ""));
+}
+
+export function makePrefixPathMatcher(prefix: string): RegExp {
+  pathPrefixRegex.test(prefix) || raise(`Invalid path prefix: ${prefix}`);
+  prefix = prefix.slice(0, -2); // Remove the "/*" suffix
+  prefix ||= "/"; // If the remaining prefix is "" (empty string), use a "/" instead
+
+  // Register the prefix matcher
+  return makePathMatcher(prefix, { exact: false });
+}
+
+export function routeMatcher(input: string): RouteMatcher {
+  const [method, pattern] = splitMethodAndPattern(input);
+  const regex = makePathMatcher(pattern, { exact: true });
+  return {
+    matchMethod(req: Request): boolean {
+      return method === req.method;
+    },
+    matchURL(url: URL) {
+      const matches = url.pathname.match(regex);
+      if (matches === null) {
+        return null;
+      }
+      return matches.groups ?? {};
+    },
+  };
 }

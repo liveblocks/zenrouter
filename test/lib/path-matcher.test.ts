@@ -1,7 +1,7 @@
 import * as fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
-import { pathMatcher } from "~/lib/path-matcher.js";
+import { routeMatcher } from "~/lib/matchers.js";
 
 function _(pathname: string, base = "https://example.com") {
   return new URL(pathname, base);
@@ -15,21 +15,21 @@ describe("pathMatcher", () => {
 
         (input) => {
           fc.pre(input.pathname !== "/");
-          expect(pathMatcher("GET /").matchURL(input)).toBeNull();
+          expect(routeMatcher("GET /").matchURL(input)).toBeNull();
         }
       )
     ));
 
   test("simple paths (without dynamic segments)", () => {
     expect(
-      pathMatcher("GET /").matchURL(new URL("https://example.com"))
+      routeMatcher("GET /").matchURL(new URL("https://example.com"))
     ).toEqual({});
     expect(
-      pathMatcher("GET /").matchURL(new URL("https://example.com/"))
+      routeMatcher("GET /").matchURL(new URL("https://example.com/"))
     ).toEqual({});
 
-    expect(pathMatcher("GET /foo").matchURL(_("/foo"))).toEqual({});
-    expect(pathMatcher("GET /foo").matchURL(_("/foo/"))).toEqual({});
+    expect(routeMatcher("GET /foo").matchURL(_("/foo"))).toEqual({});
+    expect(routeMatcher("GET /foo").matchURL(_("/foo/"))).toEqual({});
   });
 
   test.each(
@@ -44,7 +44,7 @@ describe("pathMatcher", () => {
       ["/foo/<a>/<b>", "/foo/bar/qux/baz", null],
     ]
   )("path with dynamic segment: %p %p", (pattern, input, result) => {
-    expect(pathMatcher("GET " + pattern).matchURL(_(input))).toEqual(result);
+    expect(routeMatcher("GET " + pattern).matchURL(_(input))).toEqual(result);
   });
 
   test.each([
@@ -64,6 +64,6 @@ describe("pathMatcher", () => {
     ["/foo\\bar", "Invalid pattern"],
     ["/foo/:bar", "Invalid pattern"],
   ])("throws when initialized with invalid path: %p", (invalid, errmsg) => {
-    expect(() => pathMatcher("GET " + invalid)).toThrow(errmsg);
+    expect(() => routeMatcher("GET " + invalid)).toThrow(errmsg);
   });
 });
