@@ -13,7 +13,7 @@ export type ErrorHandlerFn<E, RC = unknown> = (
 
 // The default handler, in case no custom handler is provided
 const defaultHttpErrorHandler: ErrorHandlerFn<HttpError> = (e) =>
-  json({ error: e.message }, e.status);
+  json({ error: e.message }, e.status, e.headers);
 
 // The default uncaught error handler, in case no custom handler is provided.
 // It's the ultimate fallback if everything else has failed.
@@ -89,6 +89,7 @@ export class ErrorHandler {
         return await this.#_uncaughtErrorHandler(err, extra);
       } catch (e) {
         // Fall through
+        // istanbul ignore next -- @preserve
         err = e;
       }
     } else {

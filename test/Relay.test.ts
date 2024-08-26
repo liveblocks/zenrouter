@@ -357,17 +357,9 @@ describe("Error handling behavior", () => {
       }
     );
 
-    const konsole = captureConsole();
-
     const req = new Request("http://example.org/haha"); // NOTE: Not calling /oops here!
     const resp = await app.fetch(req);
     await expectResponse(resp, { error: "Not Found" }, 404);
-
-    expect(konsole.log).not.toHaveBeenCalled();
-    expect(konsole.warn).toHaveBeenCalledWith(
-      "Relayer did not know how to handle requested path: /haha"
-    );
-    expect(konsole.error).not.toHaveBeenCalled();
   });
 
   test("same, but now there is no Router (we're using a custom handler function) #2", async () => {

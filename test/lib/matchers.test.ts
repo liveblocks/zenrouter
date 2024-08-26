@@ -7,7 +7,7 @@ function _(pathname: string, base = "https://example.com") {
   return new URL(pathname, base);
 }
 
-describe("pathMatcher", () => {
+describe("routeMatcher", () => {
   test("simple paths (without dynamic segments)", () =>
     fc.assert(
       fc.property(

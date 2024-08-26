@@ -34,10 +34,11 @@ export class HttpError extends Error {
     // 500: "Internal Server Error",
   };
 
+  // TODO Add support for "public reason" details?
   public readonly status: number;
-  public readonly err: unknown;
+  public readonly headers?: HeadersInit;
 
-  constructor(status: number, message?: string) {
+  constructor(status: number, message?: string, headers?: HeadersInit) {
     if (typeof status !== "number" || status < 100 || status >= 600) {
       raise(`Invalid HTTP status code: ${status}`);
     }
@@ -60,6 +61,7 @@ export class HttpError extends Error {
     }
 
     this.status = status;
+    this.headers = headers;
   }
 }
 

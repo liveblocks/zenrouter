@@ -7,16 +7,19 @@ import { formatShort } from "decoders";
 
 import type {
   ExtractParams,
+  HttpVerb,
   MapReturnTypes,
   Pattern,
   RouteMatcher,
 } from "~/lib/matchers.js";
-import { routeMatcher } from "~/lib/matchers.js";
+import { routeMatcher, sortHttpVerbsInPlace } from "~/lib/matchers.js";
 import { mapv, raise } from "~/lib/utils.js";
 import type { HttpError } from "~/responses/index.js";
 import { abort, json, ValidationError } from "~/responses/index.js";
 
 import { attachContext, lookupContext } from "./contexts.js";
+import type { CorsOptions } from "./cors.js";
+import { AC_ORIGIN, getCorsHeaders } from "./cors.js";
 import type { ErrorHandlerFn } from "./ErrorHandler.js";
 import { ErrorHandler } from "./ErrorHandler.js";
 
@@ -112,6 +115,17 @@ type RouterOptions<
   errorHandler?: ErrorHandler;
 
   // Mandatory config
+  /**
+   * Automatically handle CORS requests. Either set to `true` (to use all the
+   * default CORS options), or specify a CorsOptions object.
+   *
+   * When enabled, this will do two things:
+   * 1. It will respond to pre-flight requests (OPTIONS) automatically.
+   * 2. It will add the correct CORS headers to all returned responses.
+   *
+   * @default false
+   */
+  cors?: Partial<CorsOptions> | boolean;
   getContext?: (req: Request, ...args: readonly any[]) => RC;
   authorize?: AuthFn<RC, AC>;
 
@@ -143,6 +157,7 @@ export class Router<
   #_routes: RouteTuple<RC, AC>[];
   #_paramDecoders: TParams;
   #_errorHandler: ErrorHandler;
+  #_cors: Partial<CorsOptions> | null;
 
   constructor(options?: RouterOptions<RC, AC, TParams>) {
     this.#_errorHandler = options?.errorHandler ?? new ErrorHandler();
@@ -151,12 +166,13 @@ export class Router<
     this.#_defaultAuthFn =
       options?.authorize ??
       (() => {
-        // TODO "...or specify an authorize function in this specific endpoint definition"
+        // TODO Maybe make this fail as a 500 with info in the body? Since this is a setup error and should never be an issue in production.
         console.error("This request was not checked for authorization. Please configure a generic `authorize` function in the Router constructor."); // prettier-ignore
         return abort(403);
       });
     this.#_routes = [];
     this.#_paramDecoders = options?.params ?? ({} as TParams);
+    this.#_cors = (options?.cors === true ? {} : options?.cors) || null;
   }
 
   // --- PUBLIC APIs -----------------------------------------------------------------
@@ -168,7 +184,11 @@ export class Router<
     if (this.#_routes.length === 0) {
       throw new Error("No routes configured yet. Try adding one?");
     }
-    return this.#_tryDispatch.bind(this);
+
+    return async (req: Request, ...rest: readonly any[]): Promise<Response> => {
+      const resp = await this.#_tryDispatch(req, ...rest);
+      return this.#_addCorsIfNeeded(req, resp);
+    };
   }
 
   public route<P extends Pattern>(
@@ -241,6 +261,7 @@ export class Router<
     // authFn?: OpaqueAuthFn<RC>
   ): void {
     const matcher = routeMatcher(pattern);
+
     this.#_routes.push([
       pattern,
       matcher,
@@ -266,6 +287,36 @@ export class Router<
     }
   }
 
+  #_getAllowedVerbs(req: Request): string[] {
+    const url = new URL(req.url);
+
+    const verbs: Set<HttpVerb> = new Set();
+    verbs.add("OPTIONS"); // Always include OPTIONS
+
+    // Collect HTTP verbs that are valid for this URL
+    for (const [_, matcher] of this.#_routes) {
+      // If we already collected this method, avoid the regex matching
+      if (verbs.has(matcher.method)) continue;
+
+      const match = matcher.matchURL(url);
+      if (match) {
+        verbs.add(matcher.method);
+      }
+    }
+
+    return sortHttpVerbsInPlace(Array.from(verbs));
+  }
+
+  #_dispatch_OPTIONS(req: Request): Response {
+    // All responses to OPTIONS requests must be 2xx
+    return new Response(null, {
+      status: 204,
+      headers: {
+        Allow: this.#_getAllowedVerbs(req).join(", "),
+      },
+    });
+  }
+
   /**
    * Given an incoming request, starts matching its URL to one of the
    * configured routes, and invoking it if a match is found. Will not (and
@@ -279,6 +330,10 @@ export class Router<
    * - HTTP 422, if a route matches, but its body could not be validated
    */
   async #_dispatch(req: Request, ...args: readonly any[]): Promise<Response> {
+    if (req.method === "OPTIONS") {
+      return this.#_dispatch_OPTIONS(req);
+    }
+
     const url = new URL(req.url);
     const log = this.#_debug
       ? /* istanbul ignore next */
@@ -368,10 +423,60 @@ export class Router<
 
     if (pathDidMatch) {
       // If one of the paths did match, we can return a 405 error
-      return abort(405);
+      return abort(405, { Allow: this.#_getAllowedVerbs(req).join(", ") });
     }
 
     return abort(404);
+  }
+
+  #_addCorsIfNeeded(req: Request, resp: Response): Response {
+    if (!this.#_cors) {
+      // We don't want to handle CORS
+      return resp;
+    }
+
+    // Never add CORS headers to the following response codes
+    if (
+      // Never add to 101 (Switching Protocols) or 3xx (redirect) responses
+      resp.status === 101 ||
+      (resp.status >= 300 && resp.status < 400)
+    ) {
+      return resp;
+    }
+
+    // If this response already contains the main CORS header, don't touch it
+    // further
+    if (resp.headers.has(AC_ORIGIN)) {
+      // TODO Maybe throw if this happens? It definitely would be unexpected and
+      // undesired and it's better to let Zen Router be in control here.
+      return resp;
+    }
+
+    // If we enabled automatic CORS handling, add necessary CORS headers to the
+    // response now
+    const corsHeadersToAdd = getCorsHeaders(req, this.#_cors);
+    if (corsHeadersToAdd === null) {
+      // Not a CORS request, or CORS not allowed
+      return resp;
+    }
+
+    // This requires a CORS response, so let's add the headers to the returned output
+    const headers = new Headers(resp.headers);
+    for (const [k, v] of corsHeadersToAdd) {
+      if (k === "vary") {
+        // Important to not override any existing Vary headers
+        headers.append(k, v);
+      } else {
+        // Here, `k` is an `Access-Control-*` header
+        headers.set(k, v);
+      }
+    }
+
+    // Unfortunately, if we're in a Cloudflare Workers runtime you cannot mutate
+    // headers on a Response instance directly (as you can in Node or Bun).
+    // So we'll have to reconstruct a new Response instance here :(
+    const { status, body } = resp;
+    return new Response(body, { status, headers });
   }
 }
 

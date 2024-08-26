@@ -1,19 +1,36 @@
-import type { JsonObject } from "@liveblocks/core";
-import { number, object } from "decoders";
-import { describe, expect, test } from "vitest";
+import type { Json } from "@liveblocks/core";
+import { json as jsonDecoder, number, object } from "decoders";
+import { nanoid } from "nanoid";
+import { beforeEach, describe, expect, test } from "vitest";
 
 import { ErrorHandler } from "~/ErrorHandler.js";
-import { HttpError, json, Router } from "~/index.js";
-import { captureConsole, expectResponse, fail } from "~test/utils.js";
+import { abort, empty, HttpError, json, Router } from "~/index.js";
+import {
+  captureConsole,
+  disableConsole,
+  expectEmptyResponse,
+  expectResponse,
+  fail,
+} from "~test/utils.js";
 
-function ok(value: JsonObject): Response {
-  return new Response(JSON.stringify(value, null, 2), {
-    status: 200,
-    headers: { "Content-Type": "application/json; charset=utf8" },
-  });
+// Extend Response to be able to generate 101 responses. This is
+// what the Cloudflare workers platform support, but you cannot
+// construct such a Response in Node.
+class WebSocketResponse extends Response {
+  constructor(headers?: HeadersInit) {
+    super(null, { headers });
+  }
+  get status() {
+    return 101;
+  }
+  get statusText() {
+    return "Switching Protocols";
+  }
 }
 
 const IGNORE_AUTH_FOR_THIS_TEST = () => Promise.resolve(true);
+const TEST_ORIGIN = "https://example-origin.org";
+const ANOTHER_ORIGIN = "https://another-origin.org";
 
 /**
  * Generates the simplest router you can think of.
@@ -40,7 +57,7 @@ describe("starting from scratch gives guided experience", () => {
 describe("Router setup errors", () => {
   test("default context is null when not specified", async () => {
     const r = simplestRouter();
-    r.route("GET /", ({ ctx }) => ok({ ctx } as any));
+    r.route("GET /", ({ ctx }) => json({ ctx } as any));
 
     const req = new Request("http://example.org/");
     const resp = await r.fetch(req);
@@ -51,7 +68,7 @@ describe("Router setup errors", () => {
     const konsole = captureConsole();
 
     const r = new Router();
-    r.route("GET /", ({ ctx }) => ok({ ctx } as any));
+    r.route("GET /", ({ ctx }) => json({ ctx } as any));
 
     const req = new Request("http://example.org/");
     const resp = await r.fetch(req);
@@ -101,7 +118,7 @@ describe("Router setup errors", () => {
   });
 });
 
-describe("Router", () => {
+describe("Basic Router", () => {
   function num(x: string): number {
     const n = parseInt(x);
     if (isNaN(n)) {
@@ -127,10 +144,10 @@ describe("Router", () => {
     )
   );
 
-  r.route("GET /ping", () => ok({ data: "pong" }));
-  r.route("GET /echo/<name>", ({ p }) => ok({ name: p.name }));
-  r.route("GET /concat/<a>/<b>", ({ p }) => ok({ result: `${p.a}${p.b}` }));
-  r.route("GET /add/<x>/<y>", ({ p }) => ok({ result: p.x + p.y, p }));
+  r.route("GET /ping", () => json({ data: "pong" }));
+  r.route("GET /echo/<name>", ({ p }) => json({ name: p.name }));
+  r.route("GET /concat/<a>/<b>", ({ p }) => json({ result: `${p.a}${p.b}` }));
+  r.route("GET /add/<x>/<y>", ({ p }) => json({ result: p.x + p.y, p }));
   r.route("GET /custom-error", () => {
     throw new Response("I'm a custom response", { status: 499 });
   });
@@ -140,7 +157,8 @@ describe("Router", () => {
   r.route("GET /broken", () => {
     throw new Error("Random error");
   });
-  r.route("GET /echo-query", ({ q }) => ok({ q }));
+  r.route("GET /echo-query", ({ q }) => json({ q }));
+  r.route("GET /empty", () => empty());
 
   r.route("GET /test", fail);
   r.route("POST /test", fail);
@@ -223,6 +241,7 @@ describe("Router", () => {
     const req = new Request("http://example.org/echo/bar", { method: "POST" });
     const resp = await r.fetch(req);
     await expectResponse(resp, { error: "Method Not Allowed" }, 405);
+    expect(resp.headers.get("Allow")).toEqual("GET, OPTIONS");
   });
 
   test("accessing the query string", async () => {
@@ -233,6 +252,12 @@ describe("Router", () => {
     await expectResponse(resp, {
       q: { a: "1", b: "2", c: "4", "d[]": "d2", x: "" },
     });
+  });
+
+  test("return empty response", async () => {
+    const req = new Request("http://example.org/empty");
+    const resp = await r.fetch(req);
+    expectEmptyResponse(resp);
   });
 
   test("return custom response", async () => {
@@ -269,7 +294,7 @@ describe("Router authentication", () => {
       },
     });
 
-    r.route("GET /", () => ok({ ok: true }));
+    r.route("GET /", () => json({ ok: true }));
 
     const req1 = new Request("http://example.org/");
     await expectResponse(await r.fetch(req1), { error: "Forbidden" }, 403);
@@ -292,7 +317,7 @@ describe("Router authentication", () => {
       },
     });
 
-    r.route("GET /", ({ auth }) => ok({ auth }));
+    r.route("GET /", ({ auth }) => json({ auth }));
 
     const req1 = new Request("http://example.org/");
     await expectResponse(await r.fetch(req1), { error: "Forbidden" }, 403);
@@ -358,7 +383,7 @@ describe("Router body validation", () => {
     r.route("POST /", (input) => {
       // Simply accessing the `body` without defining a decoder should fail
       input.body;
-      return ok({ ok: true });
+      return { ok: true };
     });
 
     const req = new Request("http://example.org/", { method: "POST" });
@@ -373,6 +398,456 @@ describe("Router body validation", () => {
         /^Uncaught error: Error: Cannot access body: this endpoint did not define a body decoder/
       )
     );
+  });
+});
+
+function createMiniDbRouter(options: { cors: boolean }) {
+  const r = new Router({ authorize: IGNORE_AUTH_FOR_THIS_TEST, ...options });
+
+  // Simulate a mini DB
+  const db = new Map<string, Json>();
+  beforeEach(() => db.clear());
+
+  // Implement standard REST methods
+  r.route("GET /thing/<key>", ({ p }) => {
+    const { key } = p;
+    const value = db.get(p.key);
+    return value !== undefined ? { key, value } : abort(404);
+  });
+  r.route("POST /thing", jsonDecoder, ({ body }) => {
+    const key = nanoid();
+    const value = body;
+    db.set(key, value);
+    return { key, value };
+  });
+  r.route("PUT /thing/<key>", jsonDecoder, ({ p, body }) => {
+    const { key } = p;
+    const value = body;
+    db.set(key, value);
+    return { key, value };
+  });
+  r.route("DELETE /thing/<key>", ({ p }) => ({ deleted: db.delete(p.key) }));
+
+  return r;
+}
+
+describe("Router automatic OPTIONS responses (without CORS)", () => {
+  const r = createMiniDbRouter({ cors: false });
+
+  test("empty db returns 404s", async () => {
+    const resp1 = await r.fetch(new Request("http://example.org/thing/foo"));
+    await expectResponse(resp1, { error: "Not Found" }, 404);
+    expect(Object.fromEntries(resp1.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+    });
+
+    const resp2 = await r.fetch(new Request("http://example.org/thing/bar"));
+    await expectResponse(resp2, { error: "Not Found" }, 404);
+    expect(Object.fromEntries(resp2.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+    });
+  });
+
+  test("writing and reading from db works", async () => {
+    const resp1 = await r.fetch(
+      new Request("http://example.org/thing/foo", {
+        method: "PUT",
+        body: "123",
+      })
+    );
+    await expectResponse(resp1, { key: "foo", value: 123 });
+    expect(Object.fromEntries(resp1.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+    });
+
+    const resp2 = await r.fetch(new Request("http://example.org/thing/foo"));
+    await expectResponse(resp2, { key: "foo", value: 123 });
+    expect(Object.fromEntries(resp2.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+    });
+
+    const resp3 = await r.fetch(
+      new Request("http://example.org/thing", { method: "POST", body: '"xyz"' })
+    );
+    await expectResponse(resp3, { key: expect.any(String), value: "xyz" });
+    expect(Object.fromEntries(resp3.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+    });
+  });
+
+  test("http 405 responses will include allow header #1", async () => {
+    const resp = await r.fetch(new Request("http://example.org/thing"));
+    await expectResponse(resp, { error: "Method Not Allowed" }, 405);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "POST, OPTIONS",
+      "content-type": "application/json; charset=utf-8",
+    });
+  });
+
+  test("http 405 responses will include allow header #2", async () => {
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "POST", // Method not valid for this URL
+      })
+    );
+    await expectResponse(resp, { error: "Method Not Allowed" }, 405);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+      "content-type": "application/json; charset=utf-8",
+    });
+  });
+
+  test("responds to non-CORS OPTIONS requests", async () => {
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "OPTIONS",
+      })
+    );
+    expectEmptyResponse(resp);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+    });
+  });
+
+  test("responds to non-CORS OPTIONS requests", async () => {
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "OPTIONS",
+      })
+    );
+    expectEmptyResponse(resp);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+    });
+  });
+
+  test("responds to CORS preflight requests", async () => {
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "OPTIONS",
+        headers: { Origin: TEST_ORIGIN },
+      })
+    );
+    expectEmptyResponse(resp);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      // NOTE: No Access-Control-* headers here: CORS isn't enabled on this router!
+      allow: "GET, PUT, DELETE, OPTIONS",
+    });
+  });
+});
+
+describe("Router automatic OPTIONS responses (with CORS)", () => {
+  const r = createMiniDbRouter({ cors: true });
+
+  test("empty db returns 404s", async () => {
+    const resp1 = await r.fetch(new Request("http://example.org/thing/foo"));
+    await expectResponse(resp1, { error: "Not Found" }, 404);
+    expect(Object.fromEntries(resp1.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+
+    const resp2 = await r.fetch(new Request("http://example.org/thing/bar"));
+    await expectResponse(resp2, { error: "Not Found" }, 404);
+    expect(Object.fromEntries(resp2.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+  });
+
+  test("writing and reading from db works", async () => {
+    const resp1 = await r.fetch(
+      new Request("http://example.org/thing/foo", {
+        method: "PUT",
+        body: "123",
+      })
+    );
+    await expectResponse(resp1, { key: "foo", value: 123 });
+    expect(Object.fromEntries(resp1.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+
+    const resp2 = await r.fetch(new Request("http://example.org/thing/foo"));
+    await expectResponse(resp2, { key: "foo", value: 123 });
+    expect(Object.fromEntries(resp2.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+
+    const resp3 = await r.fetch(
+      new Request("http://example.org/thing", { method: "POST", body: '"xyz"' })
+    );
+    await expectResponse(resp3, { key: expect.any(String), value: "xyz" });
+    expect(Object.fromEntries(resp3.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+  });
+
+  test("http 405 responses will include allow header #1", async () => {
+    const resp = await r.fetch(new Request("http://example.org/thing"));
+    await expectResponse(resp, { error: "Method Not Allowed" }, 405);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "POST, OPTIONS",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+      "content-type": "application/json; charset=utf-8",
+    });
+  });
+
+  test("http 405 responses will include allow header #2", async () => {
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "POST", // Method not valid for this URL
+      })
+    );
+    await expectResponse(resp, { error: "Method Not Allowed" }, 405);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+      "content-type": "application/json; charset=utf-8",
+    });
+  });
+
+  test("responds to non-CORS OPTIONS requests", async () => {
+    disableConsole();
+
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "OPTIONS",
+      })
+    );
+    expectEmptyResponse(resp);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+  });
+
+  test("responds to non-CORS OPTIONS requests", async () => {
+    disableConsole();
+
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "OPTIONS",
+      })
+    );
+    expectEmptyResponse(resp);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": "*", // Because alwaysSend defaults to true in CORS config
+    });
+  });
+
+  test("responds to CORS preflight requests", async () => {
+    const resp = await r.fetch(
+      new Request("http://example.org/thing/blablabla", {
+        method: "OPTIONS",
+        headers: {
+          Origin: TEST_ORIGIN,
+          "Access-Control-Request-Method": "POST",
+        },
+      })
+    );
+    expectEmptyResponse(resp);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      allow: "GET, PUT, DELETE, OPTIONS",
+      "access-control-allow-origin": TEST_ORIGIN,
+      "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+      vary: "Origin",
+    });
+  });
+
+  test("CORS response with explicitly allowed origin", async () => {
+    const r = new Router({
+      cors: { allowedOrigins: [TEST_ORIGIN, ANOTHER_ORIGIN] },
+      //                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ 🔑
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /", () => ({ ok: true }));
+
+    const resp = await r.fetch(
+      new Request("http://example.org", {
+        headers: {
+          // NOTE: This is *NOT* a CORS request!
+          // Origin: TEST_ORIGIN,
+        },
+      })
+    );
+    await expectResponse(resp, { ok: true });
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": TEST_ORIGIN, // NOTE: Only the first allowed origin is returned
+      vary: "Origin",
+    });
+  });
+
+  test("will not override custom Vary header", async () => {
+    const r = new Router({
+      cors: true,
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /", () => json({ ok: true }, 200, { Vary: "X-Custom" }));
+
+    // Non-CORS
+    const resp1 = await r.fetch(
+      new Request("http://example.org", {
+        headers: {
+          // NOTE: This is *NOT* a CORS request!
+          // Origin: TEST_ORIGIN,
+        },
+      })
+    );
+    await expectResponse(resp1, { ok: true });
+    expect(Object.fromEntries(resp1.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+      vary: "X-Custom",
+    });
+
+    // CORS
+    const resp2 = await r.fetch(
+      new Request("http://example.org", {
+        headers: { Origin: TEST_ORIGIN },
+      })
+    );
+    await expectResponse(resp2, { ok: true });
+    expect(Object.fromEntries(resp2.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": TEST_ORIGIN,
+      vary: "X-Custom, Origin",
+    });
+  });
+});
+
+describe("CORS edge cases", () => {
+  test("won’t add CORS headers if no Origin header on incoming request and sendWildcard isn't set", async () => {
+    const r = new Router({
+      cors: { alwaysSend: false },
+      //      ^^^^^^^^^^^^^^^^^ 🔑
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /", () => ({ ok: true }));
+
+    const resp = await r.fetch(new Request("http://example.org"));
+    await expectResponse(resp, { ok: true });
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      // No CORS headers!
+    });
+  });
+
+  test("won’t add CORS headers if no Origin header on incoming request allowCredentials is set", async () => {
+    const r = new Router({
+      cors: { allowCredentials: true },
+      //      ^^^^^^^^^^^^^^^^^ 🔑
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /", () => ({ ok: true }));
+
+    const resp = await r.fetch(new Request("http://example.org"));
+    await expectResponse(resp, { ok: true });
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      // No CORS headers!
+    });
+  });
+
+  test("won’t add CORS headers if Origin is not allowed", async () => {
+    const r = new Router({
+      cors: { allowedOrigins: [ANOTHER_ORIGIN] },
+      //                       ^^^^^^^^^^^^^^ 🔑
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /", () => ({ ok: true }));
+
+    const resp = await r.fetch(
+      new Request("http://example.org", {
+        headers: {
+          Origin: "https://invalid-origin",
+        },
+      })
+    );
+    await expectResponse(resp, { ok: true });
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      "content-type": "application/json; charset=utf-8",
+      // No CORS headers!
+    });
+  });
+
+  test("won’t add CORS headers to (101 response)", async () => {
+    const r = new Router({
+      cors: true,
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /socket", () => {
+      // Return a 101 response, a socket accept
+      const resp = new WebSocketResponse({
+        "X-Custom": "my-custom-header",
+      });
+      return resp;
+    });
+
+    const resp = await r.fetch(new Request("http://example.org/socket"));
+    expect(resp.status).toEqual(101);
+    // expect(resp.status).toEqual(101);
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      // NOTE: No Access-Control-* headers here: CORS headers should not be on 101 responses!
+      "x-custom": "my-custom-header",
+    });
+  });
+
+  test("won’t add CORS headers to (3xx responses)", async () => {
+    const r = new Router({
+      cors: true,
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /301", () => new Response(null, { status: 301 }));
+    r.route("GET /303", () => new Response(null, { status: 303 }));
+    r.route("GET /308", () => new Response(null, { status: 308 }));
+
+    const resp1 = await r.fetch(new Request("http://example.org/301"));
+    expect(resp1.status).toEqual(301);
+    expect(Object.fromEntries(resp1.headers)).toEqual({
+      // Note: *no* CORS headers to be found here!
+    });
+
+    const resp2 = await r.fetch(new Request("http://example.org/303"));
+    expect(resp2.status).toEqual(303);
+    expect(Object.fromEntries(resp2.headers)).toEqual({
+      // Note: *no* CORS headers to be found here!
+    });
+
+    const resp3 = await r.fetch(new Request("http://example.org/308"));
+    expect(resp3.status).toEqual(308);
+    expect(Object.fromEntries(resp3.headers)).toEqual({
+      // Note: *no* CORS headers to be found here!
+    });
+  });
+
+  test("won’t add CORS headers to responses that already contain them", async () => {
+    const r = new Router({
+      cors: true,
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+    });
+    r.route("GET /custom-cors", () =>
+      json({ ok: true }, 200, {
+        "Access-Control-Allow-Origin": "I am set manually",
+      })
+    );
+
+    const resp = await r.fetch(new Request("http://example.org/custom-cors"));
+
+    // NOTE: Arguably, we could make this an uncaught error, because clearly we
+    // don't want a route to be setting their own CORS headers and conflict
+    // with Zen Router's logic :(
+    expect(resp.status).toEqual(200);
+
+    expect(Object.fromEntries(resp.headers)).toEqual({
+      // Note: *no* CORS headers to be found here!
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "I am set manually",
+    });
   });
 });
 

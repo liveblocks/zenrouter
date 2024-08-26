@@ -1,6 +1,6 @@
-# `zenrouter`
+<img src="./assets/zen-router.webp" alt="Zen Router" />
 
-`zenrouter` is an opinionated router, with batteries included and encouraging
+Zen Router is an opinionated router, with batteries included and encouraging
 patterns that remain maintable over time as your application grows.
 
 ## Installation
@@ -61,9 +61,12 @@ Pragmatic:
   response.
 - Will return JSON error responses by default for all known HTTP errors. Can be
   customized.
+- CORS support is built-in, and can be enabled with a simple `{ cors: true }`
+  that is a sane default for most cases.
 
 Secure/sane by default:
 
+- Will automatically manage OPTIONS routes and responses
 - All requests must be authorized. Authorization is not opt-in, but opt-out.
 - All params are verified: `/foo/<bar>/<qux>` (strings by default, or possibly
   decoded, always type-safe, available as `p.bar` and `p.qux`)
@@ -72,6 +75,9 @@ Secure/sane by default:
 - JSON bodies of POST requests will be decoded using a per-request decoder
 - Path params cannot be "empty" strings nor can be optional
 - All routes params are URI-decoded by default, this is not left to userland.
+- CORS can simply be enabled on a Router instance out of the box, following the
+  simple philosophy that when you want to enable CORS, you wish to enable it for
+  all endpoints in that router.
 
 Maintainability:
 

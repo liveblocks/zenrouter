@@ -15,7 +15,34 @@ const cleanSegmentRe = /^[\w-]+$/;
 const identifierRe = /^[a-z]\w*$/;
 const pathPrefixRegex = /^\/(([\w-]+|<[\w-]+>)\/)*\*$/;
 
-export type Method = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+export type Method = (typeof ALL_METHODS)[number];
+export type HttpVerb = (typeof ALL_HTTP_VERBS)[number];
+
+// All supported HTTP verbs, in their most natural ordering
+export const ALL_HTTP_VERBS = [
+  "GET",
+  "POST",
+  "PUT",
+  "PATCH",
+  "DELETE",
+  "OPTIONS",
+];
+
+export function sortHttpVerbsInPlace(verbs: HttpVerb[]): HttpVerb[] {
+  return verbs.sort(
+    (a, b) => ALL_HTTP_VERBS.indexOf(a) - ALL_HTTP_VERBS.indexOf(b)
+  );
+}
+
+//
+// Subset of ALL_HTTP_VERBS, but OPTIONS is not included. This is because Zen
+// Router will automatically allow OPTIONS for all registered routes, i.e. an
+// explicit OPTIONS definition like this is (currently) not allowed:
+//
+//   router.route('OPTIONS /my/path', ...)
+//
+export const ALL_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"] as const;
+
 export type PathPattern = `/${string}`;
 export type Pattern = `${Method} ${PathPattern}`;
 export type PathPrefix = `/${string}/*` | "/*";
@@ -94,6 +121,7 @@ export type ExtractParams<
 const ALL: Method[] = ["GET", "POST", "PATCH", "PUT", "DELETE"];
 
 export interface RouteMatcher {
+  method: Method;
   matchMethod(req: { method?: string }): boolean;
   matchURL(url: URL): Record<string, string> | null;
 }
@@ -124,18 +152,20 @@ function splitMethodAndPattern(
 }
 
 function makePathMatcher(pattern: string, options: { exact: boolean }): RegExp {
-  const exact = options.exact ?? true;
+  const exact = options.exact;
   if (pattern === "/") {
     return exact ? /^\/$/ : /^\//;
   }
 
   if (!pattern.startsWith("/")) {
+    // istanbul ignore next -- @preserve
     throw new Error(
       `Route must start with '/', but got ${JSON.stringify(pattern)}`
     );
   }
 
   if (pattern.endsWith("/")) {
+    // istanbul ignore next -- @preserve
     throw new Error(
       `Route may not end with '/', but got ${JSON.stringify(pattern)}`
     );
@@ -174,6 +204,7 @@ export function routeMatcher(input: string): RouteMatcher {
   const [method, pattern] = splitMethodAndPattern(input);
   const regex = makePathMatcher(pattern, { exact: true });
   return {
+    method,
     matchMethod(req: Request): boolean {
       return method === req.method;
     },

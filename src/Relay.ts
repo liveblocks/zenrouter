@@ -47,6 +47,12 @@ export class Relay {
     return this.#_tryDispatch.bind(this);
   }
 
+  /**
+   * If an incoming request matches the given prefix, forward the request as-is
+   * to the child router. Relaying happens strictly based on the request URL.
+   * It does not look at headers, or the HTTP method, or anything else to
+   * decide if it's a match.
+   */
   public relay(
     prefix: PathPrefix,
     router:
@@ -54,7 +60,7 @@ export class Relay {
       //
       // NOTE: "RequestHandler" here is only allowed here to allow passing an
       // IttyRouter.handle instance here directly. Itty router is not built with
-      // the same concepts as Zenrouter in mind (for example, it can return
+      // the same concepts as Zen Router in mind (for example, it can return
       // `undefined` instead of a Response to trigger a fallthrough). Overall,
       // it's better to remove this again once we're done refactoring away all
       // instances of Itty router.
@@ -97,7 +103,7 @@ export class Relay {
       }
     }
 
-    console.warn(`Relayer did not know how to handle requested path: ${path}`); // prettier-ignore
+    // console.warn(`Relayer did not know how to handle requested path: ${path}`);
     return abort(404);
   }
 }

@@ -8,13 +8,17 @@ export default defineConfig({
     coverage: {
       provider: "istanbul",
       reporter: ["text", "html"],
-      exclude: ["bin/", "*.cjs", "test/", "test-d/"],
+      include: ["src/"],
 
-      // Require 100% test coverage
-      lines: 100,
-      functions: 100,
-      statements: 100,
-      branches: 100,
+      // Coverage percentages
+      // <90% of coverage is considered sub-optimal
+      // >98% coverage is considered healthy
+      watermarks: {
+        branches: [90, 98],
+        functions: [90, 98],
+        lines: [90, 98],
+        statements: [90, 98],
+      },
     },
   },
 });

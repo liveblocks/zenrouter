@@ -12,11 +12,14 @@ export function empty(): Response {
 /**
  * Return a JSON response.
  */
-export function json(value: JsonObject, status = 200): Response {
+export function json(
+  value: JsonObject,
+  status = 200,
+  headers?: HeadersInit
+): Response {
   return new Response(JSON.stringify(value), {
     status,
-    // TODO: Allow passing ResponseInit options, like extra response headers?
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: { ...headers, "Content-Type": "application/json; charset=utf-8" },
   });
 }
 
@@ -27,8 +30,8 @@ export function json(value: JsonObject, status = 200): Response {
  * What response will get returned will be determined by what error handler is
  * configured for this status code in the router.
  */
-export function abort(status: number): never {
-  throw new HttpError(status);
+export function abort(status: number, headers?: HeadersInit): never {
+  throw new HttpError(status, undefined, headers);
 }
 
 export { HttpError, ValidationError };
