@@ -188,7 +188,7 @@ function makePathMatcher(pattern: string, options: { exact: boolean }): RegExp {
     index += segment.length + 1;
   }
 
-  return new RegExp("^/" + regexString.join("/") + "/?" + (exact ? "$" : ""));
+  return new RegExp("^/" + regexString.join("/") + (exact ? "/?$" : "(/|$)"));
 }
 
 export function makePrefixPathMatcher(prefix: string): RegExp {

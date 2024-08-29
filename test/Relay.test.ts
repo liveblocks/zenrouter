@@ -56,6 +56,41 @@ describe("Relay basic setup", () => {
     }
   });
 
+  test("no partial url segment matching", async () => {
+    disableConsole();
+
+    const foo = new Router(WITHOUT_AUTH);
+    foo.route("GET /foo/bar", ok("From bar"));
+
+    const relay = new Relay();
+    relay.relay("/foo/*", foo);
+    relay.relay("/*", () => fail("Nope"));
+
+    {
+      const req = new Request("http://example.org/foooooo");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Internal Server Error" }, 500); // thrown by the nope
+    }
+
+    {
+      const req = new Request("http://example.org/fo");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Internal Server Error" }, 500); // thrown by the nope
+    }
+
+    {
+      const req = new Request("http://example.org/foo");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { error: "Not Found" }, 404); // thrown by Router, not by Relay!
+    }
+
+    {
+      const req = new Request("http://example.org/foo/bar");
+      const resp = await relay.fetch(req);
+      await expectResponse(resp, { message: "From bar" });
+    }
+  });
+
   test("dynamic placeholders #1", async () => {
     disableConsole();
 
