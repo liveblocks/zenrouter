@@ -8,7 +8,7 @@ import { formatShort } from "decoders";
 import type {
   ExtractParams,
   HttpVerb,
-  MapReturnTypes,
+  MapDecoderTypes,
   Pattern,
   RouteMatcher,
 } from "~/lib/matchers.js";
@@ -107,11 +107,7 @@ type RouteTuple<RC, AC> = readonly [
   handler: OpaqueRouteHandler<RC, AC>,
 ];
 
-type RouterOptions<
-  RC,
-  AC,
-  TParams extends Record<string, (input: string) => unknown>,
-> = {
+type RouterOptions<RC, AC, TParams extends Record<string, Decoder<unknown>>> = {
   errorHandler?: ErrorHandler;
 
   // Mandatory config
@@ -149,7 +145,7 @@ type OpaqueParams = Record<string, unknown>;
 export class Router<
   RC,
   AC,
-  TParams extends Record<string, (input: string) => unknown> = {},
+  TParams extends Record<string, Decoder<unknown>> = {},
 > {
   #_debug: boolean;
   #_contextFn: (req: Request, ...args: readonly any[]) => RC;
@@ -196,7 +192,7 @@ export class Router<
     handler: RouteHandler<
       RC,
       AC,
-      ExtractParams<P, MapReturnTypes<TParams>>,
+      ExtractParams<P, MapDecoderTypes<TParams>>,
       never
     >
   ): void;
@@ -206,7 +202,7 @@ export class Router<
     handler: RouteHandler<
       RC,
       AC,
-      ExtractParams<P, MapReturnTypes<TParams>>,
+      ExtractParams<P, MapDecoderTypes<TParams>>,
       TBody
     >
   ): void;
@@ -385,7 +381,7 @@ export class Router<
         try {
           p = mapv(p, (value, key) => {
             const decoder = this.#_paramDecoders[key];
-            return decoder === undefined ? value : decoder(value);
+            return decoder === undefined ? value : decoder.verify(value);
           });
         } catch (err) {
           // A param that cannot be verified is a Bad Request

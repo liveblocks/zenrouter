@@ -1,5 +1,5 @@
 import type { Json } from "@liveblocks/core";
-import { json as jsonDecoder, number, object } from "decoders";
+import { json as jsonDecoder, number, numeric, object } from "decoders";
 import { nanoid } from "nanoid";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -119,21 +119,13 @@ describe("Router setup errors", () => {
 });
 
 describe("Basic Router", () => {
-  function num(x: string): number {
-    const n = parseInt(x);
-    if (isNaN(n)) {
-      throw new Error("Invalid number");
-    }
-    return n;
-  }
-
   const r = new Router({
     errorHandler: new ErrorHandler(),
     authorize: IGNORE_AUTH_FOR_THIS_TEST,
     getContext: () => null,
     params: {
-      x: num,
-      y: num,
+      x: numeric,
+      y: numeric,
     },
   });
 

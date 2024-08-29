@@ -1,5 +1,5 @@
 import { expectError, expectType } from "tsd";
-import { number, object, string } from "decoders";
+import { number, numeric, object, string } from "decoders";
 
 import { HttpError, Router, ValidationError } from "zenrouter";
 
@@ -70,8 +70,8 @@ async () => {
 async () => {
   const app = new Router({
     params: {
-      id: parseInt,
-      hex: (x: string) => parseInt(x, 16),
+      id: numeric,
+      hex: string.transform((x) => parseInt(x, 16)),
     },
   });
 

@@ -1,7 +1,7 @@
 import type { Resolve } from "@liveblocks/core";
+import type { Decoder } from "decoders";
 import type {
   ComposeLeft,
-  Functions,
   Objects,
   Pipe,
   Strings,
@@ -80,9 +80,9 @@ type ExtractParamsBasic<P extends Pattern> = Pipe<
  * For:
  *
  *   {
- *     a: () => number,
- *     b: () => 'hi',
- *     c: () => boolean,
+ *     a: Decoder<number>,
+ *     b: Decoder<'hi'>,
+ *     c: Decoder<boolean>,
  *   }
  *
  * Will return:
@@ -94,10 +94,9 @@ type ExtractParamsBasic<P extends Pattern> = Pipe<
  *   }
  *
  */
-export type MapReturnTypes<T> = Pipe<
-  T,
-  [Objects.MapValues<Functions.ReturnType>]
->;
+export type MapDecoderTypes<T> = {
+  [K in keyof T]: T[K] extends Decoder<infer V> ? V : never;
+};
 
 // export type WithDefaults<A, B> = Pipe<>;
 
