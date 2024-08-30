@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { abort, json, Relay, Router } from "~/index.js";
+import { abort, json, ZenRelay, ZenRouter } from "~/index.js";
 import {
   captureConsole,
   disableConsole,
@@ -16,7 +16,7 @@ describe("Relay basic setup", () => {
   test("no configured relays", async () => {
     disableConsole();
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     const req = new Request("http://example.org/");
     const resp = await relay.fetch(req);
     await expectResponse(resp, { error: "Not Found" }, 404);
@@ -25,10 +25,10 @@ describe("Relay basic setup", () => {
   test("unused prefixes", async () => {
     disableConsole();
 
-    const foo = new Router(WITHOUT_AUTH);
+    const foo = new ZenRouter(WITHOUT_AUTH);
     foo.route("GET /foo/bar", ok("From bar"));
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     relay.relay("/foo/*", foo);
 
     {
@@ -59,10 +59,10 @@ describe("Relay basic setup", () => {
   test("no partial url segment matching", async () => {
     disableConsole();
 
-    const foo = new Router(WITHOUT_AUTH);
+    const foo = new ZenRouter(WITHOUT_AUTH);
     foo.route("GET /foo/bar", ok("From bar"));
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     relay.relay("/foo/*", foo);
     relay.relay("/*", () => fail("Nope"));
 
@@ -94,12 +94,12 @@ describe("Relay basic setup", () => {
   test("dynamic placeholders #1", async () => {
     disableConsole();
 
-    const foo = new Router(WITHOUT_AUTH);
+    const foo = new ZenRouter(WITHOUT_AUTH);
     foo.route("GET /foo/bar", ok("From bar"));
     foo.route("GET /foo/qux/hello", ok("From hello"));
     foo.route("GET /foo/baz/mutt", ok("From mutt"));
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     relay.relay("/foo/<abc>/*", foo);
 
     {
@@ -142,12 +142,12 @@ describe("Relay basic setup", () => {
   test("dynamic placeholders #2", async () => {
     disableConsole();
 
-    const foo = new Router(WITHOUT_AUTH);
+    const foo = new ZenRouter(WITHOUT_AUTH);
     foo.route("GET /foo/bar", ok("From bar"));
     foo.route("GET /foo/qux/hello", ok("From hello"));
     foo.route("GET /foo/baz/mutt", ok("From mutt"));
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     relay.relay("/<abc>/baz/*", foo);
 
     {
@@ -190,16 +190,16 @@ describe("Relay basic setup", () => {
   test("catchalls", async () => {
     disableConsole();
 
-    const foo = new Router(WITHOUT_AUTH);
+    const foo = new ZenRouter(WITHOUT_AUTH);
     foo.route("GET /foo/bar", ok("From router 1"));
 
-    const bar = new Router(WITHOUT_AUTH);
+    const bar = new ZenRouter(WITHOUT_AUTH);
     bar.route("GET /bar/baz", ok("From router 2"));
 
-    const qux = new Router(WITHOUT_AUTH);
+    const qux = new ZenRouter(WITHOUT_AUTH);
     qux.route("GET /qux/mutt", ok("From router 3"));
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     relay.relay("/foo/*", foo);
     relay.relay("/bar/*", bar);
     relay.relay("/*", qux);
@@ -250,16 +250,16 @@ describe("Relay basic setup", () => {
   test("catchalls (order matters)", async () => {
     disableConsole();
 
-    const foo = new Router(WITHOUT_AUTH);
+    const foo = new ZenRouter(WITHOUT_AUTH);
     foo.route("GET /foo/bar", ok("From router 1"));
 
-    const bar = new Router(WITHOUT_AUTH);
+    const bar = new ZenRouter(WITHOUT_AUTH);
     bar.route("GET /bar/baz", ok("From router 2"));
 
-    const qux = new Router(WITHOUT_AUTH);
+    const qux = new ZenRouter(WITHOUT_AUTH);
     qux.route("GET /qux/mutt", ok("From router 3"));
 
-    const relay = new Relay();
+    const relay = new ZenRelay();
     relay.relay("/*", qux); // 🔑 NOTE: Catchall defined before all other routes!
     relay.relay("/foo/*", foo);
     relay.relay("/bar/*", bar);
@@ -292,29 +292,29 @@ describe("Relay basic setup", () => {
 
 describe("Misconfigured Relay instance", () => {
   test("invalid match prefix #1", () => {
-    const relay = new Relay();
-    expect(() => relay.relay("GET /foo" as any, new Router())).toThrow(
+    const relay = new ZenRelay();
+    expect(() => relay.relay("GET /foo" as any, new ZenRouter())).toThrow(
       "Invalid path prefix: GET /foo"
     );
   });
 
   test("invalid match prefix #2", () => {
-    const relay = new Relay();
-    expect(() => relay.relay("/foo /bar" as any, new Router())).toThrow(
+    const relay = new ZenRelay();
+    expect(() => relay.relay("/foo /bar" as any, new ZenRouter())).toThrow(
       "Invalid path prefix: /foo /bar"
     );
   });
 
   test("invalid match prefix #3", () => {
-    const relay = new Relay();
-    expect(() => relay.relay("/foo" as any, new Router())).toThrow(
+    const relay = new ZenRelay();
+    expect(() => relay.relay("/foo" as any, new ZenRouter())).toThrow(
       "Invalid path prefix: /foo"
     );
   });
 
   test("invalid match prefix #4", () => {
-    const relay = new Relay();
-    expect(() => relay.relay("/foo*" as any, new Router())).toThrow(
+    const relay = new ZenRelay();
+    expect(() => relay.relay("/foo*" as any, new ZenRouter())).toThrow(
       "Invalid path prefix: /foo*"
     );
   });
@@ -323,13 +323,13 @@ describe("Misconfigured Relay instance", () => {
 describe("Error handling behavior", () => {
   test("aborting vs throwing custom error (which remains uncaught)", async () => {
     const konsole = captureConsole();
-    const router = new Router(WITHOUT_AUTH);
+    const router = new ZenRouter(WITHOUT_AUTH);
     router.route("GET /test/403", () => abort(403));
     router.route("GET /test/oops", () => {
       throw new Error("Oops");
     });
 
-    const relay = new Relay().relay("/test/*", router);
+    const relay = new ZenRelay().relay("/test/*", router);
 
     {
       const req = new Request("http://example.org/test/403");
@@ -354,7 +354,7 @@ describe("Error handling behavior", () => {
 
   test("same, but now uncaught handler is defined (at the Router level)", async () => {
     const konsole = captureConsole();
-    const router = new Router(WITHOUT_AUTH);
+    const router = new ZenRouter(WITHOUT_AUTH);
     router.onUncaughtError(() => json({ custom: "error" }, 500));
 
     router.route("GET /test/403", () => abort(403));
@@ -362,7 +362,7 @@ describe("Error handling behavior", () => {
       throw new Error("Oops");
     });
 
-    const relay = new Relay().relay("/test/*", router);
+    const relay = new ZenRelay().relay("/test/*", router);
 
     {
       const req = new Request("http://example.org/test/403");
@@ -382,7 +382,7 @@ describe("Error handling behavior", () => {
   });
 
   test("same, but now there is no Router (we're using a custom handler function) #1", async () => {
-    const app = new Relay().relay(
+    const app = new ZenRelay().relay(
       "/oops/*",
       // NOTE! *Not* using a Router instance here, instead using a custom
       // handler function directly! This is NOT recommended, but currently
@@ -398,7 +398,7 @@ describe("Error handling behavior", () => {
   });
 
   test("same, but now there is no Router (we're using a custom handler function) #2", async () => {
-    const app = new Relay().relay(
+    const app = new ZenRelay().relay(
       "/oops/*",
       // NOTE! *Not* using a Router instance here, instead using a custom
       // handler function directly! This is NOT recommended, but currently

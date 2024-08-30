@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { abort, HttpError } from "~/responses/index.js";
-import { Router } from "~/Router.js";
+import { ZenRouter } from "~/Router.js";
 
 import { lookupContext } from "./contexts.js";
 import { ErrorHandler } from "./ErrorHandler.js";
@@ -32,7 +32,7 @@ type RelayOptions = {
  *
  * If no matching route is found, it will return a generic 404 error response.
  */
-export class Relay {
+export class ZenRelay {
   #_errorHandler: ErrorHandler;
   #_routers: [prefixMatcher: RegExp, handler: RequestHandler][] = [];
 
@@ -56,7 +56,7 @@ export class Relay {
   public relay(
     prefix: PathPrefix,
     router:
-      | Router<any, any, any>
+      | ZenRouter<any, any, any>
       //
       // NOTE: "RequestHandler" here is only allowed here to allow passing an
       // IttyRouter.handle instance here directly. Itty router is not built with
@@ -69,7 +69,7 @@ export class Relay {
     const prefixMatcher = makePrefixPathMatcher(prefix);
     this.#_routers.push([
       prefixMatcher,
-      router instanceof Router ? router.fetch : router,
+      router instanceof ZenRouter ? router.fetch : router,
     ]);
     return this; // Allow chaining
   }

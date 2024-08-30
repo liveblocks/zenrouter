@@ -142,7 +142,7 @@ type OpaqueRouteHandler<RC, AC> = (
 
 type OpaqueParams = Record<string, unknown>;
 
-export class Router<
+export class ZenRouter<
   RC,
   AC,
   TParams extends Record<string, Decoder<unknown>> = {},
@@ -221,11 +221,13 @@ export class Router<
     );
   }
 
+  // TODO Maybe remove this on the Router class, since it's only a pass-through method
   public onUncaughtError(handler: ErrorHandlerFn<unknown, RC>): this {
     this.#_errorHandler.onUncaughtError(handler as ErrorHandlerFn<unknown>);
     return this;
   }
 
+  // TODO Maybe remove this on the Router class, since it's only a pass-through method
   public onError(
     handler: ErrorHandlerFn<HttpError | ValidationError, RC>
     //                                  ^^^^^^^^^^^^^^^

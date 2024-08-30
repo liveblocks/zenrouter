@@ -1,14 +1,14 @@
 import { expectType } from "tsd";
-import { Relay, Router } from "zenrouter";
+import { ZenRelay, ZenRouter } from "zenrouter";
 
 declare const req: Request;
 
 async () => {
-  const app = new Relay();
+  const app = new ZenRelay();
   app
-    .relay("/foo/*", new Router())
-    .relay("/bar/*", new Router())
-    .relay("/qux/*", new Router())
-    .relay("/*", new Router());
+    .relay("/foo/*", new ZenRouter())
+    .relay("/bar/*", new ZenRouter())
+    .relay("/qux/*", new ZenRouter())
+    .relay("/*", new ZenRouter());
   expectType<Response>(await app.fetch(req, 1, "a", true));
 };

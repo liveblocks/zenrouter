@@ -37,6 +37,12 @@ export class ErrorHandler {
 
   /**
    * Registers a custom HTTP error handler.
+   *
+   * This will get called whenever an `HttpError` is thrown (which also happens
+   * with `abort()`) from a route handler.
+   *
+   * It will *NOT* get called if a `Response` instance is thrown (or returned)
+   * from a handler directly!
    */
   public onError(handler: ErrorHandlerFn<HttpError>): void {
     if (this.#_httpErrorHandler !== null) {
@@ -47,6 +53,10 @@ export class ErrorHandler {
 
   /**
    * Registers a custom uncaught error handler.
+   *
+   * This will only get called if there is an unexpected error thrown from
+   * a route handler, i.e. something that isn't a `Response` instance, or an
+   * `HttpError`.
    */
   public onUncaughtError(handler: ErrorHandlerFn<unknown>): void {
     if (this.#_uncaughtErrorHandler !== null) {

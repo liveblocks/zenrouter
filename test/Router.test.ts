@@ -4,7 +4,7 @@ import { nanoid } from "nanoid";
 import { beforeEach, describe, expect, test } from "vitest";
 
 import { ErrorHandler } from "~/ErrorHandler.js";
-import { abort, empty, HttpError, json, Router } from "~/index.js";
+import { abort, empty, HttpError, json, ZenRouter } from "~/index.js";
 import {
   captureConsole,
   disableConsole,
@@ -36,17 +36,17 @@ const ANOTHER_ORIGIN = "https://another-origin.org";
  * Generates the simplest router you can think of.
  */
 function simplestRouter() {
-  return new Router({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+  return new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
 }
 
 describe("starting from scratch gives guided experience", () => {
   test("take 0", () => {
-    const r = new Router();
+    const r = new ZenRouter();
     expect(() => r.fetch).toThrow("No routes configured yet. Try adding one?");
   });
 
   test("take 1", () => {
-    const r = new Router();
+    const r = new ZenRouter();
     expect(() =>
       // @ts-expect-error deliberate type error
       r.route("/", fail)
@@ -67,7 +67,7 @@ describe("Router setup errors", () => {
   test("unless you specifically define how to authorize, the default router will reject all requests", async () => {
     const konsole = captureConsole();
 
-    const r = new Router();
+    const r = new ZenRouter();
     r.route("GET /", ({ ctx }) => json({ ctx } as any));
 
     const req = new Request("http://example.org/");
@@ -119,7 +119,7 @@ describe("Router setup errors", () => {
 });
 
 describe("Basic Router", () => {
-  const r = new Router({
+  const r = new ZenRouter({
     errorHandler: new ErrorHandler(),
     authorize: IGNORE_AUTH_FOR_THIS_TEST,
     getContext: () => null,
@@ -280,7 +280,7 @@ describe("Basic Router", () => {
 
 describe("Router authentication", () => {
   test("Authorized when returning truthy value", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       authorize: ({ req }) => {
         return req.headers.get("Authorization") === "v3ry-s3cr3t!";
       },
@@ -298,7 +298,7 @@ describe("Router authentication", () => {
   });
 
   test("Returning parsed auth data", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       authorize: ({ req }) => {
         const header = req.headers.get("Authorization");
         if (!header?.startsWith("v3ry-s3cr3t!")) {
@@ -327,7 +327,7 @@ describe("Router authentication", () => {
 });
 
 describe("Router body validation", () => {
-  const r = new Router({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+  const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
 
   r.route(
     "POST /add",
@@ -370,7 +370,7 @@ describe("Router body validation", () => {
   test("accessing body without defining a decoder is an error", async () => {
     const konsole = captureConsole();
 
-    const r = new Router({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
 
     r.route("POST /", (input) => {
       // Simply accessing the `body` without defining a decoder should fail
@@ -394,7 +394,7 @@ describe("Router body validation", () => {
 });
 
 function createMiniDbRouter(options: { cors: boolean }) {
-  const r = new Router({ authorize: IGNORE_AUTH_FOR_THIS_TEST, ...options });
+  const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST, ...options });
 
   // Simulate a mini DB
   const db = new Map<string, Json>();
@@ -651,7 +651,7 @@ describe("Router automatic OPTIONS responses (with CORS)", () => {
   });
 
   test("CORS response with explicitly allowed origin", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: { allowedOrigins: [TEST_ORIGIN, ANOTHER_ORIGIN] },
       //                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^ 🔑
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
@@ -675,7 +675,7 @@ describe("Router automatic OPTIONS responses (with CORS)", () => {
   });
 
   test("will not override custom Vary header", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: true,
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
     });
@@ -714,7 +714,7 @@ describe("Router automatic OPTIONS responses (with CORS)", () => {
 
 describe("CORS edge cases", () => {
   test("won’t add CORS headers if no Origin header on incoming request and sendWildcard isn't set", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: { alwaysSend: false },
       //      ^^^^^^^^^^^^^^^^^ 🔑
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
@@ -730,7 +730,7 @@ describe("CORS edge cases", () => {
   });
 
   test("won’t add CORS headers if no Origin header on incoming request allowCredentials is set", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: { allowCredentials: true },
       //      ^^^^^^^^^^^^^^^^^ 🔑
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
@@ -746,7 +746,7 @@ describe("CORS edge cases", () => {
   });
 
   test("won’t add CORS headers if Origin is not allowed", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: { allowedOrigins: [ANOTHER_ORIGIN] },
       //                       ^^^^^^^^^^^^^^ 🔑
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
@@ -768,7 +768,7 @@ describe("CORS edge cases", () => {
   });
 
   test("won’t add CORS headers to (101 response)", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: true,
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
     });
@@ -790,7 +790,7 @@ describe("CORS edge cases", () => {
   });
 
   test("won’t add CORS headers to (3xx responses)", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: true,
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
     });
@@ -818,7 +818,7 @@ describe("CORS edge cases", () => {
   });
 
   test("won’t add CORS headers to responses that already contain them", async () => {
-    const r = new Router({
+    const r = new ZenRouter({
       cors: true,
       authorize: IGNORE_AUTH_FOR_THIS_TEST,
     });
@@ -845,8 +845,8 @@ describe("CORS edge cases", () => {
 
 describe("Error handling setup", () => {
   test("every router has its own error handler", async () => {
-    const app1 = new Router();
-    const app2 = new Router();
+    const app1 = new ZenRouter();
+    const app2 = new ZenRouter();
 
     // Configured in r1...
     app1.onError((e) => {
@@ -871,8 +871,8 @@ describe("Error handling setup", () => {
 
   test("multiple routers can share the same error handler", async () => {
     const errorHandler = new ErrorHandler();
-    const app1 = new Router({ errorHandler });
-    const app2 = new Router({ errorHandler });
+    const app1 = new ZenRouter({ errorHandler });
+    const app2 = new ZenRouter({ errorHandler });
 
     // Configured in r1...
     app1.onError((e) => {
@@ -898,7 +898,7 @@ describe("Error handling setup", () => {
   test("handles bugs in http error handler itself", async () => {
     const konsole = captureConsole();
 
-    const app = new Router();
+    const app = new ZenRouter();
     app.onError(() => {
       throw new Error("Oops, I'm a broken error handler");
     });

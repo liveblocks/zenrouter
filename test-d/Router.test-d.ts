@@ -1,12 +1,12 @@
 import { expectError, expectType } from "tsd";
 import { number, numeric, object, string } from "decoders";
 
-import { HttpError, Router, ValidationError } from "zenrouter";
+import { HttpError, ValidationError, ZenRouter } from "zenrouter";
 
 declare const req: Request;
 
 async () => {
-  const app = new Router();
+  const app = new ZenRouter();
 
   app.route("GET /<foo>", ({ ctx, p }) => {
     expectType<Readonly<unknown>>(ctx);
@@ -19,7 +19,7 @@ async () => {
 
 // With a getContext() function
 async () => {
-  const app = new Router({
+  const app = new ZenRouter({
     getContext: (request, ...args) => ({ hello: "world", request, args }),
   });
 
@@ -33,7 +33,7 @@ async () => {
 
 // With a authorize() function
 async () => {
-  const app = new Router({
+  const app = new ZenRouter({
     authorize: ({ ctx }) => ({
       userId: "user-123",
       passThrough: { ctx },
@@ -50,7 +50,7 @@ async () => {
 
 // With a getContext() + authorize() function
 async () => {
-  const app = new Router({
+  const app = new ZenRouter({
     getContext: () => ({ abc: 123 }),
     authorize: ({ ctx }) => ({
       userId: "user-456",
@@ -68,7 +68,7 @@ async () => {
 
 // With centralized param validation
 async () => {
-  const app = new Router({
+  const app = new ZenRouter({
     params: {
       id: numeric,
       hex: string.transform((x) => parseInt(x, 16)),
@@ -134,7 +134,7 @@ async () => {
 
 // Type-safety of error handlers
 async () => {
-  const app = new Router();
+  const app = new ZenRouter();
 
   app.onUncaughtError((e) => {
     expectType<unknown>(e);
