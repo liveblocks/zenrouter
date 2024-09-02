@@ -371,29 +371,24 @@ export class ZenRouter<
           return abort(403);
         }
 
+        // Verify route params
         let p;
         try {
           p = mapv(match, decodeURIComponent);
-        } catch (err) {
-          // A malformed URI that cannot be decoded properly is a Bad Request
-          return abort(400);
-        }
-
-        // Verify params
-        try {
           p = mapv(p, (value, key) => {
             const decoder = this.#_paramDecoders[key];
             return decoder === undefined ? value : decoder.verify(value);
           });
         } catch (err) {
-          // A param that cannot be verified is a Bad Request
+          // A malformed URI that cannot be decoded properly or a param that
+          // could not be decoded properly are both Bad Requests
           return abort(400);
         }
 
         const decodeResult = bodyDecoder
           ? // TODO: This can throw if the body does not contain a valid JSON
             // request. If so, we should return a 400.
-            bodyDecoder.decode(await parseJson(req))
+            bodyDecoder.decode(await tryReadBodyAsJson(req))
           : null;
 
         if (decodeResult && !decodeResult.ok) {
@@ -495,10 +490,22 @@ function wrap<RC, AC>(
   };
 }
 
-async function parseJson(req: Request): Promise<Json> {
+/**
+ * Attempts to reads the request body as JSON. Will return an empty request
+ * body as `undefined`.
+ */
+// TODO Currently, this helper will not look at or respect the Content-Type
+// TODO header, and I think that is a bug.
+// TODO Need to think about how to best handle this exactly without breaking
+// TODO this API for the "lazy" that never set `content-type` to
+// TODO "application/json" explicitly.
+async function tryReadBodyAsJson(req: Request): Promise<Json | undefined> {
+  // Try reading JSON body
   try {
-    return (await req.json()) as Json;
-  } catch (err) {
-    return abort(400);
+    const text = await req.text();
+    return text === "" ? undefined : (JSON.parse(text) as Json);
+  } catch (e) {
+    // Invalid JSON body
+    abort(400);
   }
 }

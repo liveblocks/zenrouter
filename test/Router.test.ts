@@ -1,5 +1,11 @@
 import type { Json } from "@liveblocks/core";
-import { json as jsonDecoder, number, numeric, object } from "decoders";
+import {
+  json as jsonDecoder,
+  number,
+  numeric,
+  object,
+  optional,
+} from "decoders";
 import { nanoid } from "nanoid";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -151,6 +157,7 @@ describe("Basic Router", () => {
   });
   r.route("GET /echo-query", ({ q }) => json({ q }));
   r.route("GET /empty", () => empty());
+  r.route("POST /empty", optional(object({ a: number })), () => ({ ok: true }));
 
   r.route("GET /test", fail);
   r.route("POST /test", fail);
@@ -244,6 +251,32 @@ describe("Basic Router", () => {
     await expectResponse(resp, {
       q: { a: "1", b: "2", c: "4", "d[]": "d2", x: "" },
     });
+  });
+
+  test("can accept empty bodies", async () => {
+    {
+      const req = new Request("http://example.org/empty", {
+        method: "POST",
+        body: "nah-ah", // Invalid body ← 🔑
+      });
+      await expectResponse(await r.fetch(req), { error: "Bad Request" }, 400);
+    }
+
+    {
+      const req = new Request("http://example.org/empty", {
+        method: "POST",
+        body: '{"a": 123}', // Valid body
+      });
+      await expectResponse(await r.fetch(req), { ok: true });
+    }
+
+    {
+      const req = new Request("http://example.org/empty", {
+        method: "POST",
+        // No body here ← 🔑
+      });
+      await expectResponse(await r.fetch(req), { ok: true });
+    }
   });
 
   test("return empty response", async () => {
