@@ -42,6 +42,10 @@ app.route(
 export default app;
 ```
 
+## The Zen Router pipeline
+
+![](./zen-router-diagram.png)
+
 ## Principles
 
 General principles:
