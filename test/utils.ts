@@ -56,10 +56,13 @@ export async function expectResponse(
   }
 }
 
+type Consolish = Pick<typeof console, "log" | "info" | "warn" | "error">;
+
 /**
  * Installs a console spy for the duration of this test.
  */
-export function captureConsole() {
+export function captureConsole(): Consolish {
+  /* eslint-disable @typescript-eslint/unbound-method */
   const log = vi.spyOn(console, "log").mockImplementation(() => void 0);
   onTestFinished(log.mockRestore);
 
@@ -71,8 +74,9 @@ export function captureConsole() {
 
   const error = vi.spyOn(console, "error").mockImplementation(() => void 0);
   onTestFinished(error.mockRestore);
+  /* eslint-enable @typescript-eslint/unbound-method */
 
-  return { log, info, warn, error };
+  return { log, info, warn, error } as unknown as Consolish;
 }
 
 /**
