@@ -1,5 +1,5 @@
 import { raise } from "~/lib/utils.js";
-import { HttpError, json } from "~/responses/index.js";
+import { HttpError, json, ValidationError } from "~/responses/index.js";
 
 export type ErrorContext<RC> = {
   req: Request;
@@ -13,7 +13,14 @@ export type ErrorHandlerFn<E, RC = unknown> = (
 
 // The default handler, in case no custom handler is provided
 const defaultHttpErrorHandler: ErrorHandlerFn<HttpError> = (e) =>
-  json({ error: e.message }, e.status, e.headers);
+  json(
+    {
+      error: e.message,
+      reason: e instanceof ValidationError ? e.reason : undefined,
+    },
+    e.status,
+    e.headers
+  );
 
 // The default uncaught error handler, in case no custom handler is provided.
 // It's the ultimate fallback if everything else has failed.

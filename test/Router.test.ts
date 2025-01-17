@@ -387,7 +387,10 @@ describe("Router body validation", () => {
     });
     await expectResponse(
       await r.fetch(req),
-      { error: "Unprocessable Entity" },
+      {
+        error: "Unprocessable Entity",
+        reason: "Value at key 'y': Must be number",
+      },
       422
     );
   });
