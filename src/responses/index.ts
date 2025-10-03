@@ -1,5 +1,6 @@
 import type { JsonObject } from "@liveblocks/core";
 
+import type { HeadersInit } from "./compat.js";
 import { HttpError, ValidationError } from "./HttpError.js";
 
 /**

@@ -1,5 +1,7 @@
 import { raise } from "~/lib/utils.js";
 
+import type { HeadersInit } from "./compat.js";
+
 export class HttpError extends Error {
   static readonly codes: { [code: number]: string | undefined } = {
     400: "Bad Request",
