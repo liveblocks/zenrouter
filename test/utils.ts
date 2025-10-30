@@ -39,7 +39,7 @@ export async function expectResponse(
 
     const mimeType = resp.headers.get("Content-Type")?.split(";")[0];
     if (mimeType === "application/json") {
-      const json = (await resp.json()) as unknown;
+      const json = await resp.json();
       expect(json).toEqual(expectedBody);
       expect(resp.status).toEqual(expectedStatus);
     } else if (mimeType === "text/plain") {

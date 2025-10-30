@@ -43,7 +43,7 @@
     "nanoid": "^3"
   },
   "peerDependencies": {
-    "decoders": "^2.7"
+    "decoders": "^2.8.0-1"
   },
   "repository": {
     "type": "git",
