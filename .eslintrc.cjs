@@ -3,8 +3,6 @@ module.exports = {
   extends: ["@liveblocks/eslint-config"],
 
   rules: {
-    "@typescript-eslint/member-ordering": "error",
-
     // Disable these for this library specifically
     "@typescript-eslint/ban-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
