@@ -43,6 +43,7 @@
     "nanoid": "^3"
   },
   "peerDependencies": {
+    "@opentelemetry/api": "^1.9.0",
     "decoders": "^2.8.0-1"
   },
   "repository": {

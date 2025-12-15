@@ -2,6 +2,7 @@
 
 // TODO: Make this a local definition?
 import type { Json, JsonObject } from "@liveblocks/core";
+import { context, trace } from "@opentelemetry/api";
 import type { Decoder } from "decoders";
 import { formatShort } from "decoders";
 
@@ -359,6 +360,11 @@ export class ZenRouter<
 
         log?.(`  ...against ${pattern}? ✅ Match! ${JSON.stringify(match)}`);
 
+        // Add route pattern as span attribute
+        // This is done early so the route is recorded even for auth/validation errors
+        const span = trace.getSpan(context.active());
+        span?.setAttribute("zen.route", pattern);
+
         const base = {
           req,
           url,
@@ -383,6 +389,11 @@ export class ZenRouter<
           // A malformed URI that cannot be decoded properly or a param that
           // could not be decoded properly are both Bad Requests
           return abort(400);
+        }
+
+        // Add decoded route params as span attributes
+        for (const [key, value] of Object.entries(p)) {
+          span?.setAttribute(`zen.param.${key}`, String(value));
         }
 
         const decodeResult = bodyDecoder
