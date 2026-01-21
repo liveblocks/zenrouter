@@ -164,7 +164,7 @@ export class ZenRouter<
       options?.authorize ??
       (() => {
         // TODO Maybe make this fail as a 500 with info in the body? Since this is a setup error and should never be an issue in production.
-        console.error("This request was not checked for authorization. Please configure a generic `authorize` function in the Router constructor."); // prettier-ignore
+        console.error("This request was not checked for authorization. Please configure a generic `authorize` function in the ZenRouter constructor."); // prettier-ignore
         return abort(403);
       });
     this.#_routes = [];

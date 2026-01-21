@@ -81,7 +81,7 @@ describe("Router setup errors", () => {
     await expectResponse(resp, { error: "Forbidden" }, 403);
 
     expect(konsole.error).toHaveBeenCalledWith(
-      "This request was not checked for authorization. Please configure a generic `authorize` function in the Router constructor."
+      "This request was not checked for authorization. Please configure a generic `authorize` function in the ZenRouter constructor."
     );
   });
 

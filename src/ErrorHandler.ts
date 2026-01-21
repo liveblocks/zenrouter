@@ -1,5 +1,10 @@
 import { raise } from "~/lib/utils.js";
-import { HttpError, json, ValidationError } from "~/responses/index.js";
+import {
+  HttpError,
+  isGenericAbort,
+  json,
+  ValidationError,
+} from "~/responses/index.js";
 
 export type ErrorContext<RC> = {
   req: Request;
@@ -11,7 +16,7 @@ export type ErrorHandlerFn<E, RC = unknown> = (
   extra: ErrorContext<RC>
 ) => Response | Promise<Response>;
 
-// The default handler, in case no custom handler is provided
+// The default handler for HttpErrors, in case no custom handler is provided
 const defaultHttpErrorHandler: ErrorHandlerFn<HttpError> = (e) =>
   json(
     {
@@ -80,9 +85,23 @@ export class ErrorHandler {
     err: unknown,
     extra: ErrorContext<unknown>
   ): Promise<Response> {
-    // If it's already a response, we're done quickly
+    // If it's a Response, check if it's a generic abort or a custom response
     if (err instanceof Response) {
-      return err;
+      if (isGenericAbort(err)) {
+        // Generic abort - convert to HttpError and run through normal error handling
+        const status = err.status;
+        const headers = Object.fromEntries(err.headers.entries());
+        try {
+          err = new HttpError(status, undefined, headers);
+          // Fall through to HttpError handling below
+        } catch {
+          // Status code not supported by HttpError (5xx, 422, or unknown code)
+          return json({ error: "Unknown" }, status, headers);
+        }
+      } else {
+        // Custom response - return verbatim
+        return err;
+      }
     }
 
     // If error is not an instance of HttpError, then it's an otherwise
