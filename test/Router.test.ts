@@ -23,7 +23,7 @@ import {
 // what the Cloudflare workers platform support, but you cannot
 // construct such a Response in Node.
 class WebSocketResponse extends Response {
-  constructor(headers?: HeadersInit) {
+  constructor(headers?: Record<string, string>) {
     super(null, { headers });
   }
   get status() {

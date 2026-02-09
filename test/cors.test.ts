@@ -15,7 +15,7 @@ function configureCors(options: Partial<CorsOptions> = {}) {
 }
 
 /** Builds a "normal" (non-preflight) request, from TEST_ORIGIN */
-function makeNormalRequest(method: string, headers: HeadersInit) {
+function makeNormalRequest(method: string, headers: Record<string, string>) {
   return new Request(url, {
     method,
     headers: {
