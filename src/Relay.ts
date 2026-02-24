@@ -33,8 +33,8 @@ type RelayOptions = {
  * If no matching route is found, it will return a generic 404 error response.
  */
 export class ZenRelay {
-  #_errorHandler: ErrorHandler;
-  #_routers: [prefixMatcher: RegExp, handler: RequestHandler][] = [];
+  readonly #_errorHandler: ErrorHandler;
+  readonly #_routers: [prefixMatcher: RegExp, handler: RequestHandler][] = [];
 
   constructor(options?: RelayOptions) {
     this.#_errorHandler = options?.errorHandler ?? new ErrorHandler();

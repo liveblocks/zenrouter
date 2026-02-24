@@ -153,14 +153,14 @@ export class ZenRouter<
   AC,
   TParams extends Record<string, StandardSchemaV1> = {},
 > {
-  #_debug: boolean;
-  #_contextFn: (req: Request, ...args: readonly any[]) => RC;
-  #_defaultAuthFn: AuthFn<RC, AC>;
-  #_routes: RouteTuple<RC, AC>[];
-  #_paramDecoders: TParams;
-  #_errorHandler: ErrorHandler;
-  #_cors: Partial<CorsOptions> | null;
-  #_otel: OtelConfig | undefined;
+  readonly #_debug: boolean;
+  readonly #_contextFn: (req: Request, ...args: readonly any[]) => RC;
+  readonly #_defaultAuthFn: AuthFn<RC, AC>;
+  readonly #_routes: RouteTuple<RC, AC>[];
+  readonly #_paramDecoders: TParams;
+  readonly #_errorHandler: ErrorHandler;
+  readonly #_cors: Partial<CorsOptions> | null;
+  readonly #_otel: OtelConfig | undefined;
 
   constructor(options?: RouterOptions<RC, AC, TParams>) {
     this.#_errorHandler = options?.errorHandler ?? new ErrorHandler();
