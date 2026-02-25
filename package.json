@@ -1,6 +1,6 @@
 {
   "name": "@liveblocks/zenrouter",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model.",
   "type": "module",
   "main": "./dist/index.js",
