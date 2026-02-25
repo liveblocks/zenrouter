@@ -1,0 +1,25 @@
+# NPM
+node_modules/
+dist/
+
+# Testing
+coverage/
+
+# Claude Code config
+.claude/cache/
+.claude/*.local.json
+CLAUDE.local.md
+
+# TypeScript
+*.tsbuildinfo
+
+# Turborepo
+.turbo/
+
+# iJunk
+.DS_Store
+
+# Editors
+.lvimrc
+.vim/
+.vscode/
