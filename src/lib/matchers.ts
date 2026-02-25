@@ -1,4 +1,3 @@
-import type { Resolve } from "@liveblocks/core";
 import type {
   ComposeLeft,
   Objects,
@@ -7,6 +6,8 @@ import type {
   Tuples,
   Unions,
 } from "hotscript";
+
+import type { Resolve } from "~/lib/Resolve.js";
 
 import type { StandardSchemaV1 } from "./standard-schema.js";
 import { raise } from "./utils.js";

@@ -1,4 +1,3 @@
-import type { Json } from "@liveblocks/core";
 import {
   json as jsonDecoder,
   number,
@@ -11,6 +10,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 
 import { ErrorHandler } from "~/ErrorHandler.js";
 import { abort, empty, HttpError, json, ZenRouter } from "~/index.js";
+import type { Json } from "~/lib/Json.js";
 import {
   captureConsole,
   disableConsole,

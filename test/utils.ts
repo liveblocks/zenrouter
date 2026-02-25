@@ -1,7 +1,7 @@
-import type { Json } from "@liveblocks/core";
 import { expect, onTestFinished, vi } from "vitest";
 
 import { json } from "~/index.js";
+import type { Json } from "~/lib/Json.js";
 
 export function fail(): never {
   throw new Error("I should not get invoked");

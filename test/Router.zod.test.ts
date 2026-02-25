@@ -50,11 +50,9 @@ describe("Router body validation (zod)", () => {
     ({ body }) => ({ result: body.x + body.y })
   );
 
-  r.route(
-    "POST /empty",
-    z.object({ a: z.number() }).optional(),
-    () => ({ ok: true })
-  );
+  r.route("POST /empty", z.object({ a: z.number() }).optional(), () => ({
+    ok: true,
+  }));
 
   test("accepts correct body", async () => {
     const req = new Request("http://example.org/add", {

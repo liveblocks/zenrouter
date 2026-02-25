@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-// TODO: Make this a local definition?
-import type { Json, JsonObject } from "@liveblocks/core";
-
+import type { Json, JsonObject } from "~/lib/Json.js";
 import type {
   ExtractParams,
   HttpVerb,
@@ -360,7 +358,9 @@ export class ZenRouter<
         pathDidMatch = true;
         if (!matcher.matchMethod(req)) {
           log?.(
-            `  ...against ${pattern}? 🧐 Path matches, but method did not! ${JSON.stringify(match)}`
+            `  ...against ${pattern}? 🧐 Path matches, but method did not! ${JSON.stringify(
+              match
+            )}`
           );
           continue;
         }
