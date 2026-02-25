@@ -16,8 +16,8 @@
   <a href="https://bundlephobia.com/package/@liveblocks/zenrouter">
     <img src="https://img.shields.io/bundlephobia/minzip/@liveblocks/zenrouter?style=flat&label=size&color=09f" alt="Size" />
   </a>
-  <a href="https://github.com/liveblocks/liveblocks/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/liveblocks/liveblocks?style=flat&label=license&color=f80" alt="License" />
+  <a href="https://github.com/liveblocks/zenrouter/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/liveblocks/zenrouter?style=flat&label=license&color=f80" alt="License" />
   </a>
 </p>
 
