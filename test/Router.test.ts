@@ -1,4 +1,4 @@
-import type { Json } from "~/types/Json.js";
+import type { Json } from "~/lib/Json.js";
 import {
   json as jsonDecoder,
   number,

@@ -1,4 +1,4 @@
-import type { Json, JsonObject } from "~/types/Json.js";
+import type { Json, JsonObject } from "~/lib/Json.js";
 
 import type { HeadersInit } from "./compat.js";
 import { HttpError, ValidationError } from "./HttpError.js";

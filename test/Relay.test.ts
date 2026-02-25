@@ -5,6 +5,7 @@ import {
   captureConsole,
   disableConsole,
   expectResponse,
+  fail,
   ok,
 } from "~test/utils.js";
 
@@ -64,7 +65,7 @@ describe("Relay basic setup", () => {
 
     const relay = new ZenRelay();
     relay.relay("/foo/*", foo);
-    relay.relay("/*", () => fail("Nope"));
+    relay.relay("/*", () => fail());
 
     {
       const req = new Request("http://example.org/foooooo");

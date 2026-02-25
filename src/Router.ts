@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import type { Json, JsonObject } from "~/types/Json.js";
+import type { Json, JsonObject } from "~/lib/Json.js";
 
 import type {
   ExtractParams,

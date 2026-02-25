@@ -1,4 +1,4 @@
-import type { Resolve } from "~/types/Resolve.js";
+import type { Resolve } from "~/lib/Resolve.js";
 import type {
   ComposeLeft,
   Objects,
