@@ -3,7 +3,7 @@
   <a href="https://liveblocks.io#gh-dark-mode-only"><img src="https://raw.githubusercontent.com/liveblocks/liveblocks/main/.github/assets/header-dark.svg" alt="Liveblocks" /></a>
 </p>
 
-# `@liveblocks/zenrouter`
+# Zen Router
 
 <p>
   <a href="https://npmjs.org/package/@liveblocks/zenrouter"><img src="https://img.shields.io/npm/v/@liveblocks/zenrouter?style=flat&label=npm&color=c33" alt="NPM" /></a>
