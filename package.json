@@ -1,7 +1,7 @@
 {
   "name": "@liveblocks/zenrouter",
   "version": "1.0.13",
-  "description": "An opinionated router library for building APIs following best practices.",
+  "description": "An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
