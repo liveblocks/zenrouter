@@ -24,7 +24,7 @@ concurrency:
 run-name: "Release (increment: ${{ github.event.inputs.increment }}, prerelease: ${{ github.event.inputs.prerelease || 'none' }}${{ github.event.inputs.dry-run == 'true' && ', dry run' || '' }})"
 permissions:
   id-token: write
-  contents: read
+  contents: write
 jobs:
   release:
     runs-on: ubuntu-latest
