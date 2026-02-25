@@ -38,6 +38,9 @@
   },
   "license": "Apache-2.0",
   "author": "Liveblocks Inc.",
+  "peerDependencies": {
+    "hotscript": "^1.0.13"
+  },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.3",
     "@release-it/keep-a-changelog": "^7.0.1",
@@ -48,7 +51,6 @@
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-simple-import-sort": "^12.1.0",
     "fast-check": "^3.23.2",
-    "hotscript": "^1.0.13",
     "nanoid": "^3",
     "prettier": "^3.4.2",
     "publint": "^0.3.6",
