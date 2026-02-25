@@ -6,7 +6,7 @@
     "moduleResolution": "bundler",
 
     "target": "es2022",
-    "lib": ["esnext", "webworker"],
+    "lib": ["esnext", "webworker", "webworker.iterable"],
     "skipLibCheck": true,
 
     "esModuleInterop": true,

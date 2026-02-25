@@ -1,4 +1,4 @@
-import type { Resolve } from "@liveblocks/core";
+import type { Resolve } from "~/types/Resolve.js";
 import type {
   ComposeLeft,
   Objects,

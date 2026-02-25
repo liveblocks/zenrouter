@@ -1,4 +1,4 @@
-import type { Json } from "@liveblocks/core";
+import type { Json } from "~/types/Json.js";
 import { expect, onTestFinished, vi } from "vitest";
 
 import { json } from "~/index.js";

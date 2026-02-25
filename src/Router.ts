@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-// TODO: Make this a local definition?
-import type { Json, JsonObject } from "@liveblocks/core";
+import type { Json, JsonObject } from "~/types/Json.js";
 
 import type {
   ExtractParams,
