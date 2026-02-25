@@ -2,6 +2,10 @@ import { createMDX } from "fumadocs-mdx/next";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
+if (!process.env.BASE_URL) {
+  throw new Error("BASE_URL environment variable is not set");
+}
+
 const withMDX = createMDX();
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

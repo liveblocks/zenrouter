@@ -56,10 +56,14 @@ export async function generateMetadata(
   if (!page) notFound();
 
   return {
+    metadataBase: new URL(process.env.BASE_URL!),
     title: page.data.title,
     description: page.data.description,
     openGraph: {
       images: getPageImage(page).url,
+    },
+    alternates: {
+      canonical: page.url,
     },
   };
 }
