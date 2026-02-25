@@ -33,12 +33,14 @@
     "lint:package": "publint --strict && attw --pack",
     "test": "vitest run --color",
     "test:watch": "vitest watch --color",
-    "test:types": "npm run build && tsd"
+    "test:types": "npm run build && tsd",
+    "release": "release-it"
   },
   "license": "Apache-2.0",
   "author": "Liveblocks Inc.",
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.3",
+    "@release-it/keep-a-changelog": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
     "decoders": "^2.8.0",
@@ -50,6 +52,7 @@
     "nanoid": "^3",
     "prettier": "^3.4.2",
     "publint": "^0.3.6",
+    "release-it": "^18.1.2",
     "tsd": "^0.31.2",
     "tsup": "^8.3.5",
     "typescript": "^5.9.3",
