@@ -1,13 +1,79 @@
 ---
-title: Hello World
-description: Your first document
+title: Zen Router
+description: An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model.
 ---
 
-Welcome to the docs! You can start writing documents in `/content/docs`.
+Zen Router is an opinionated API router built by
+[Liveblocks](https://liveblocks.io), powering billions of requests per month.
+It's designed for Cloudflare Workers, Bun, Node.js, and every other modern
+JavaScript runtime.
 
-## What is Next?
+```bash tab="npm"
+npm install @liveblocks/zenrouter
+```
 
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
-</Cards>
+```bash tab="pnpm"
+pnpm add @liveblocks/zenrouter
+```
+
+```bash tab="bun"
+bun add @liveblocks/zenrouter
+```
+
+```bash tab="yarn"
+yarn add @liveblocks/zenrouter
+```
+
+## Quick example
+
+```ts
+import { ZenRouter } from "@liveblocks/zenrouter";
+import { z } from "zod";
+
+const zen = new ZenRouter({
+  authorize: async (req) => {
+    const token = req.headers.get("Authorization");
+    const currentUser = await db.getUserByToken(token);
+    if (!currentUser) return false;
+    return { currentUser };
+  },
+});
+
+// Get a specific post
+zen.route(
+  "GET /api/posts/<postId>",
+
+  async ({ p, auth }) => {
+    const post = await db.getPost(auth.currentUser.id, p.postId);
+    return { id: post.id, title: post.title };
+  }
+);
+
+// Create a new post for the current user
+zen.route(
+  "POST /api/posts",
+
+  z.object({ title: z.string() }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+
+export default zen;
+```
+
+## Features
+
+- [Type-safe all around](/docs/todo) — path params (`p`), query strings (`q`), and request bodies (`body`) are all fully typed
+- [Body validation](/docs/todo) — with Zod, [decoders](https://decoders.cc/), or any [Standard Schema](https://github.com/standard-schema/standard-schema) library
+- [Authorization](/docs/todo) — mandatory by design, opt-out for public routes
+- [Route groups](/docs/todo) — isolate routers by auth strategy with `ZenRelay`
+- [CORS](/docs/todo) — built-in, not bolted on
+- [Error handling](/docs/todo) — `abort(404)` from any handler, customizable error shapes
+- [Response helpers](/docs/todo) — `json()`, `html()`, `empty()`, `textStream()`, and more
+- [OpenTelemetry](/docs/todo) — automatic span attributes for matched routes
