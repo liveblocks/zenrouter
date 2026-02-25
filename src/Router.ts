@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
 import type { Json, JsonObject } from "~/lib/Json.js";
-
 import type {
   ExtractParams,
   HttpVerb,
@@ -103,7 +102,7 @@ type RouteTuple<RC, AC> = readonly [
   matcher: RouteMatcher,
   auth: AuthFn<RC, AC>,
   bodySchema: StandardSchemaV1 | null,
-  handler: OpaqueRouteHandler<RC, AC>
+  handler: OpaqueRouteHandler<RC, AC>,
 ];
 
 type RouterOptions<RC, AC, TParams extends Record<string, StandardSchemaV1>> = {
@@ -150,7 +149,7 @@ type OpaqueParams = Record<string, unknown>;
 export class ZenRouter<
   RC,
   AC,
-  TParams extends Record<string, StandardSchemaV1> = {}
+  TParams extends Record<string, StandardSchemaV1> = {},
 > {
   readonly #_debug: boolean;
   readonly #_contextFn: (req: Request, ...args: readonly any[]) => RC;

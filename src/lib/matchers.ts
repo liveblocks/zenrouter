@@ -1,4 +1,3 @@
-import type { Resolve } from "~/lib/Resolve.js";
 import type {
   ComposeLeft,
   Objects,
@@ -8,6 +7,8 @@ import type {
   Unions,
 } from "hotscript";
 
+import type { Resolve } from "~/lib/Resolve.js";
+
 import type { StandardSchemaV1 } from "./standard-schema.js";
 import { raise } from "./utils.js";
 
@@ -15,8 +16,8 @@ const cleanSegmentRe = /^[\w-]+$/;
 const identifierRe = /^[a-z]\w*$/;
 const pathPrefixRegex = /^\/(([\w-]+|<[\w-]+>)\/)*\*$/;
 
-export type Method = typeof ALL_METHODS[number];
-export type HttpVerb = typeof ALL_HTTP_VERBS[number];
+export type Method = (typeof ALL_METHODS)[number];
+export type HttpVerb = (typeof ALL_HTTP_VERBS)[number];
 
 // All supported HTTP verbs, in their most natural ordering
 export const ALL_HTTP_VERBS = [
@@ -67,12 +68,12 @@ type ExtractParamsBasic<P extends Pattern> = Pipe<
         [
           Strings.Trim<"<" | ">">, // ......... ['bar', 'qux']
           Unions.ToTuple, // .................. [['bar'], ['qux']]
-          Tuples.Append<string> // ........... [['bar', string], ['qux', string]]
+          Tuples.Append<string>, // ........... [['bar', string], ['qux', string]]
         ]
       >
     >,
     Tuples.ToUnion, // ........................ ['bar', string] | ['qux', string]
-    Objects.FromEntries // ................... { bar: string; qux: string }
+    Objects.FromEntries, // ................... { bar: string; qux: string }
   ]
 >;
 
@@ -114,7 +115,7 @@ export type MapSchemaOutput<T> = {
 export type ExtractParams<
   P extends Pattern,
   TParamTypes extends Record<string, unknown>,
-  E = ExtractParamsBasic<P>
+  E = ExtractParamsBasic<P>,
 > = Resolve<
   Pick<Omit<E, keyof TParamTypes> & TParamTypes, Extract<keyof E, string>>
 >;
