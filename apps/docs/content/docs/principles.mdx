@@ -10,7 +10,9 @@ API design.
 
 - Implementing real-world endpoints should be **joyful**, **easy**, and
   **type-safe**.
-- All requests and responses are **JSON by default**.
+- All requests and responses are **JSON by default**. For convenience, you can
+  directly return a JSON value and it will be turned into a proper JSON
+  `Response` with the correct headers.
 - You can _throw_ any HTTP error to short-circuit a non-2xx response.
 - JSON error responses for all common HTTP status codes, customizable per
   status code.
@@ -44,5 +46,9 @@ API design.
   a single request context (`ctx`) that carries data alongside a request.
   Figuring out where contextual data comes from is one "Jump to definition"
   away.
+- If you return a JSON value from your handler directly, it **must be an
+  object**, not an array. We do this to encourage building
+  [extensible](https://maltzj.com/posts/avoiding-json-arrays) responses by
+  default.
 - Default error handling is **configurable per status code**; individual handlers
   can always bypass it by throwing a custom Response.
