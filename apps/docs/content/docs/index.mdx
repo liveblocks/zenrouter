@@ -26,7 +26,7 @@ yarn add @liveblocks/zenrouter
 
 ## Quick example
 
-```ts
+```ts tab="Full"
 import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
@@ -37,6 +37,223 @@ const zen = new ZenRouter({
     if (!currentUser) return false;
     return { currentUser };
   },
+});
+
+// Get a specific post
+zen.route(
+  "GET /api/posts/<postId>",
+
+  async ({ p, auth }) => {
+    const post = await db.getPost(auth.currentUser.id, p.postId);
+    return { id: post.id, title: post.title };
+  }
+);
+
+// Create a new post for the current user
+zen.route(
+  "POST /api/posts",
+
+  z.object({ title: z.string() }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+
+export default zen;
+```
+
+```ts tab="Auth"
+import { ZenRouter } from "@liveblocks/zenrouter";
+import { z } from "zod";
+
+const zen = new ZenRouter({
+  // [!code highlight]
+  authorize: async (req) => {
+    const token = req.headers.get("Authorization"); // [!code highlight]
+    const currentUser = await db.getUserByToken(token); // [!code highlight]
+    if (!currentUser) return false; // [!code highlight]
+    return { currentUser }; // [!code highlight]
+  }, // [!code highlight]
+});
+
+// Get a specific post
+zen.route(
+  "GET /api/posts/<postId>",
+
+  // [!code highlight]
+  async ({ p, auth }) => {
+    const post = await db.getPost(auth.currentUser.id, p.postId); // [!code highlight]
+    return { id: post.id, title: post.title };
+  }
+);
+
+// Create a new post for the current user
+zen.route(
+  "POST /api/posts",
+
+  z.object({ title: z.string() }),
+
+  // [!code highlight]
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      // [!code highlight]
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+
+export default zen;
+```
+
+```ts tab="Route params"
+import { ZenRouter } from "@liveblocks/zenrouter";
+import { z } from "zod";
+
+const zen = new ZenRouter({
+  authorize: async (req) => {
+    const token = req.headers.get("Authorization");
+    const currentUser = await db.getUserByToken(token);
+    if (!currentUser) return false;
+    return { currentUser };
+  },
+});
+
+// Get a specific post
+zen.route(
+  // [!code highlight]
+  "GET /api/posts/<postId>",
+
+  // [!code highlight]
+  async ({ p, auth }) => {
+    const post = await db.getPost(auth.currentUser.id, p.postId); // [!code highlight]
+    return { id: post.id, title: post.title };
+  }
+);
+
+// Create a new post for the current user
+zen.route(
+  "POST /api/posts",
+
+  z.object({ title: z.string() }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+
+export default zen;
+```
+
+```ts tab="zod"
+import { ZenRouter } from "@liveblocks/zenrouter";
+// [!code highlight]
+import { z } from "zod";
+
+const zen = new ZenRouter({
+  authorize: async (req) => {
+    const token = req.headers.get("Authorization");
+    const currentUser = await db.getUserByToken(token);
+    if (!currentUser) return false;
+    return { currentUser };
+  },
+});
+
+// Get a specific post
+zen.route(
+  "GET /api/posts/<postId>",
+
+  async ({ p, auth }) => {
+    const post = await db.getPost(auth.currentUser.id, p.postId);
+    return { id: post.id, title: post.title };
+  }
+);
+
+// Create a new post for the current user
+zen.route(
+  "POST /api/posts",
+
+  // [!code highlight]
+  z.object({ title: z.string() }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+
+export default zen;
+```
+
+```ts tab="decoders"
+import { ZenRouter } from "@liveblocks/zenrouter";
+// [!code highlight]
+import { object, string } from "decoders";
+
+const zen = new ZenRouter({
+  authorize: async (req) => {
+    const token = req.headers.get("Authorization");
+    const currentUser = await db.getUserByToken(token);
+    if (!currentUser) return false;
+    return { currentUser };
+  },
+});
+
+// Get a specific post
+zen.route(
+  "GET /api/posts/<postId>",
+
+  async ({ p, auth }) => {
+    const post = await db.getPost(auth.currentUser.id, p.postId);
+    return { id: post.id, title: post.title };
+  }
+);
+
+// Create a new post for the current user
+zen.route(
+  "POST /api/posts",
+
+  // [!code highlight]
+  object({ title: string }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+
+export default zen;
+```
+
+```ts tab="CORS"
+import { ZenRouter } from "@liveblocks/zenrouter";
+import { z } from "zod";
+
+const zen = new ZenRouter({
+  authorize: async (req) => {
+    const token = req.headers.get("Authorization");
+    const currentUser = await db.getUserByToken(token);
+    if (!currentUser) return false;
+    return { currentUser };
+  },
+  // [!code highlight]
+  cors: true,
 });
 
 // Get a specific post
