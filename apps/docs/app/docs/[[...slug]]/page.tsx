@@ -9,7 +9,7 @@ import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
-import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
+import { PageActions } from "@/components/ai/page-actions";
 import { gitConfig } from "@/lib/layout.shared";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
@@ -52,17 +52,16 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         ),
       }}
     >
-      <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription className="mb-0">
-        {page.data.description}
-      </DocsDescription>
-      <div className="flex flex-row gap-2 items-center border-b pb-6">
-        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
-        <ViewOptions
+      <div className="flex items-start justify-between gap-4">
+        <DocsTitle>{page.data.title}</DocsTitle>
+        <PageActions
           markdownUrl={`${page.url}.mdx`}
           githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/${gitConfig.contentPath}/${page.path}`}
         />
       </div>
+      <DocsDescription className="mb-0 border-b pb-6">
+        {page.data.description}
+      </DocsDescription>
       <DocsBody>
         <MDX
           components={getMDXComponents({
