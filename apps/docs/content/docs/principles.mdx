@@ -40,15 +40,18 @@ API design.
 - Routes always **include the method in their definition**, so `"POST
 /api/posts"` instead of `.post("/api/posts")`. There is no such thing as
   `.all("/api/posts")`.
-- **No middlewares.** Middlewares are easy to bolt on but get harder to trace in
-  large codebases over time: which ones are active, what do they do, what did
-  they attach to the request object? Zen Router replaces all of that with
+- **No middlewares.** Middlewares are easy to bolt on but get harder to trace
+  in large codebases over time: which ones are active, what do they do, what
+  did they attach to the request object? Zen Router replaces all of that with
   a single request context (`ctx`) that carries data alongside a request.
   Figuring out where contextual data comes from is one "Jump to definition"
   away.
+- **No fall-through.** Once a route handler runs, it _must_ return a response.
+  It never silently falls through to another handler. The same applies to
+  [composed routers](/docs/composing-routers).
+- Default error handling is **configurable per status code**; individual
+  handlers can always bypass it by throwing a custom Response.
 - If you return a JSON value from your handler directly, it **must be an
   object**, not an array. We do this to encourage building
   [extensible](https://maltzj.com/posts/avoiding-json-arrays) responses by
   default.
-- Default error handling is **configurable per status code**; individual handlers
-  can always bypass it by throwing a custom Response.

@@ -1,0 +1,58 @@
+---
+title: Composing routers
+description: Composing multiple routers with different auth requirements using Zen Relay.
+---
+
+A typical backend serves endpoints to different audiences, each with its own
+requirements: your main API might need token auth, admin routes require stricter
+access, webhook receivers verify request signatures, and some routes need no auth
+at all. Different audiences may also need different error responses — user-facing
+APIs benefit from friendly, helpful error messages, while internal endpoints can
+be more terse. Zen Router lets you group routes with the same requirements into
+separate `ZenRouter` instances, then bind them together with `ZenRelay`.
+
+<Callout type="info">
+  If you only need a single auth strategy, a single `ZenRouter` is enough. No
+  `ZenRelay` needed.
+</Callout>
+
+## ZenRelay
+
+`ZenRelay` is nothing but a thin dispatch layer. All it does is look at an
+incoming request, select which router handles it based on the given URL prefix,
+and pass it to the first matching router. It does no parsing, no validation, no
+auth—that’s all handled by the `ZenRouter` instance it dispatches to.
+
+```ts title="src/index.ts"
+import { ZenRelay } from "@liveblocks/zenrouter";
+
+import { zen as authRoutes } from "./routes/auth";
+import { zen as apiRoutes } from "./routes/api";
+import { zen as adminRoutes } from "./routes/admin";
+import { zen as webhookRoutes } from "./routes/webhooks";
+
+const app = new ZenRelay();
+app.relay("/auth/*", authRoutes);
+app.relay("/api/admin/*", adminRoutes);
+app.relay("/api/*", apiRoutes);
+app.relay("/webhooks/*", webhookRoutes);
+
+export default app;
+```
+
+## No fall-through
+
+There is **no implicit fall-through** between routers. This is a [core
+principle](/docs/principles#maintainable).
+
+For example, if a request is made to `/api/admin/users/123`, only the
+`/api/admin/*` router will ever see it. If that router doesn't have a matching
+route handler, it will return 404. The `/api/*` router will deliberately
+**not** get a chance to handle it. Each router has its own auth and error
+handling behavior, so routers are fully isolated from each other.
+
+## Keep it flat
+
+The encouraged pattern is a single `ZenRelay` layer at the top level,
+dispatching to one set of `ZenRouter` instances. Don't nest relays or routers.
+It only makes the routing harder to follow.

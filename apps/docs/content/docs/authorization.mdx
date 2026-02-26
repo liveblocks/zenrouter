@@ -1,0 +1,89 @@
+---
+title: Authorization
+description: Mandatory auth, request context, and public routes.
+---
+
+## The `authorize` function
+
+Every `ZenRouter` requires an `authorize` function. It runs before every route
+handler. See the [Request lifecycle](/docs/request-lifecycle). Return a falsy
+value to reject the request with `403 Forbidden`. Return any truthy value to
+allow the request, and that value becomes available as `auth` in the handler.
+
+```ts
+const zen = new ZenRouter({
+  authorize: async ({ req }) => {
+    const token = req.headers.get("Authorization");
+    const user = await db.getUserByToken(token);
+    if (!user) return false; // → 403 Forbidden
+    return { currentUser: user };
+  },
+});
+
+zen.route("GET /api/posts", async ({ auth }) => {
+  // auth.currentUser is fully typed
+  return db.getPostsByUser(auth.currentUser.id);
+});
+```
+
+Auth is **mandatory by design**. This ensures you can never accidentally expose
+a route without auth.
+
+## Public routes
+
+If none of your routes require authentication, explicitly opt out by returning
+`true`.
+
+```ts
+const zen = new ZenRouter({
+  authorize: () => true,
+});
+
+// ⚠️ Now all these routes are public!
+zen.route("GET /api/health", ...);
+zen.route("GET /api/version", ...);
+zen.route("POST /api/webhooks/stripe", ...);
+```
+
+<Callout type="idea">
+  If most routes require auth but a few don't, split the public ones into a
+  separate, isolated `ZenRouter` instance and then [compose them
+  together](/docs/composing-routers).
+</Callout>
+
+## The `getContext` function
+
+`getContext` is an optional hook for attaching metadata to a request. The return
+value becomes available as `ctx` in every handler and in `authorize`.
+
+```ts
+const zen = new ZenRouter({
+  getContext: (req) => ({
+    db: getDbConnection(),
+    logger: createLogger(req),
+  }),
+
+  authorize: async ({ req, ctx }) => {
+    ctx.logger.info("Checking auth...");
+    const token = req.headers.get("Authorization");
+    const currentUser = await ctx.db.getUserByToken(token);
+    if (!currentUser) return false;
+    return { currentUser };
+  },
+});
+
+zen.route(
+  "GET /api/posts/<postId>",
+
+  async ({ ctx, auth, p }) => {
+    ctx.logger.info(`Fetching post ${p.postId}`);
+    return ctx.db.getPostById(p.postId);
+  }
+);
+```
+
+Use context for static metadata like database connections or loggers. Do not
+use it for auth: that's what the mandatory `authorize` is for.
+
+See the [Request lifecycle](/docs/request-lifecycle) for a full overview of how
+a request flows through the router.

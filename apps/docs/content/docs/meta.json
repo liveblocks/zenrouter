@@ -1,8 +1,12 @@
 {
   "pages": [
     "index",
-    "---Features---",
+    "---Concepts---",
     "routes",
+    "authorization",
+    "composing-routers",
+    "---Runtimes---",
+    "runtime-guides",
     "---Misc---",
     "principles",
     "request-lifecycle"
