@@ -124,8 +124,9 @@ zen.route(
 ```
 
 If any param fails this validation, a `400 Bad Request` will be returned. See
-the [Request lifecycle](/docs/request-lifecycle).  
-For example, a request to `/api/posts/123/tag/yellow`, because `yellow` is not a valid tag.
+the [Request lifecycle](/docs/request-lifecycle). For example, a request to
+`/api/posts/123/tag/yellow` would be rejected because `yellow` is not a valid
+color.
 
 ## Body validation
 
@@ -277,7 +278,7 @@ zen.route(
 );
 ```
 
-```ts tab="Request"
+```ts tab="Response"
 zen.route(
   "GET /example",
 

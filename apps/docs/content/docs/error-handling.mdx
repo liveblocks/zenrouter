@@ -24,16 +24,10 @@ zen.route(
 );
 ```
 
-Inside endpoint handlers, calling `abort(404)` or similar is the simplest way
-to return a non-200 response. The error response is determined by the router's
-error handler (see below).
-
 `abort()` throws internally and never returns. By default, it produces a JSON
 response like `{ "error": "Not Found" }` using the standard message for the
-status code.
-
-You can customize the actual error shape in the router's error handler (see
-below).
+status code. You can customize the error shape with the router's error handler
+(see below).
 
 ## Default error shape
 
@@ -113,7 +107,7 @@ aborts under these conditions:
 | **403** Forbidden             | `authorize` returns a falsy value            |
 | **404** Not Found             | No route matches the URL                     |
 | **405** Method Not Allowed    | URL matches but HTTP method doesn't          |
-| **422** Unprocessable Content | Request body fails schema validation         |
+| **422** Unprocessable Entity  | Request body fails schema validation         |
 | **500** Internal Server Error | Uncaught error in a handler                  |
 
 See also the [Request lifecycle](/docs/request-lifecycle).

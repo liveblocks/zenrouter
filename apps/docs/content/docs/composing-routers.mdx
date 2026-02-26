@@ -19,7 +19,7 @@ If you only need a single auth strategy, a single `ZenRouter` is enough. No
 `ZenRelay` is nothing but a thin dispatch layer. All it does is look at an
 incoming request, select which router handles it based on the given URL prefix,
 and pass it to the first matching router. It does no parsing, no validation, no
-auth—that’s all handled by the `ZenRouter` instance it dispatches to.
+auth — that’s all handled by the `ZenRouter` instance it dispatches to.
 
 ```ts title="src/index.ts"
 import { ZenRelay } from "@liveblocks/zenrouter";

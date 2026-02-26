@@ -27,8 +27,8 @@ API design.
 - All requests must be authorized. **Authorization is opt-out, not opt-in.**
 - All **path params are verified and type-safe** (`/foo/<bar>/<qux>` available as
   `p.bar` and `p.qux`), cannot be empty, and are URI-decoded automatically.
-- Incoming JSON on POST requests **must be validated**, and are made available
-  as a fully type-safe `body` in the handler.
+- Incoming JSON request bodies **must be validated**, and are made available as
+  a fully type-safe `body` in the handler.
 - All query strings are type-safely accessible (`/foo?abc=hi` as `q.abc`).
 
 ## Maintainable
@@ -37,9 +37,9 @@ API design.
   [greppable](https://morizbuesing.com/blog/greppability-code-metric/)**. No
   "base" prefix URL setup, which in practice makes codebases harder to navigate
   over time.
-- Routes always **include the method in their definition**, so `"POST
-/api/posts"` instead of `.post("/api/posts")`. There is no such thing as
-  `.all("/api/posts")`.
+- Routes always **include the method in their definition**, so
+  `"POST /api/posts"` instead of `.post("/api/posts")`. There is no such thing
+  as `.all("/api/posts")`.
 - **No middlewares.** Middlewares are easy to bolt on but get harder to trace
   in large codebases over time: which ones are active, what do they do, what
   did they attach to the request object? Zen Router replaces all of that with
