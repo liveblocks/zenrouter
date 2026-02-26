@@ -2,6 +2,7 @@
   "pages": [
     "index",
     "---Misc---",
-    "principles"
+    "principles",
+    "request-lifecycle"
   ]
 }
