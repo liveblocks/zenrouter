@@ -57,17 +57,13 @@ If a request is made to a URL that doesn’t match any route, Zen Router returns
 that isn’t defined, Zen Router will automatically return the correct `405
 Method Not Allowed` response.
 
-## Param decoders
+## Route param schema
 
-By default, all path params will get exposed as strings in `p`.
-This is a good default since path params
-are strings.
-If you want, however, you can limit their allowed inputs or
-convert them to other types (e.g. numbers, enums, etc.).
-You can register custom param decoders
-at the router level using any
-[Standard Schema](https://standardschema.dev/) compatible
-library:
+By default, all path params will get exposed as strings in `p`. This is a good
+default since path params are strings. If you want, however, you can limit
+their allowed inputs or convert them to other types (e.g. numbers, enums,
+etc.). You can define route param schema at the router level using any
+[Standard Schema](https://standardschema.dev/) compatible library:
 
 ```ts tab="zod"
 import { z } from "zod";

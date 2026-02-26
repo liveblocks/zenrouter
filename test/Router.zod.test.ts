@@ -6,7 +6,7 @@ import { expectResponse } from "~test/utils.js";
 
 const IGNORE_AUTH_FOR_THIS_TEST = () => Promise.resolve(true);
 
-describe("Param decoders (zod)", () => {
+describe("Route param schema (zod)", () => {
   // Zod equivalent of decoders' `numeric`: coerce a string input to a number
   const zodNumeric = z.coerce.number();
 
