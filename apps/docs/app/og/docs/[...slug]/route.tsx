@@ -1,7 +1,6 @@
 import { getPageImage, source } from "@/lib/source";
 import { notFound } from "next/navigation";
 import { ImageResponse } from "@takumi-rs/image-response";
-import { generate as DefaultImage } from "fumadocs-ui/og/takumi";
 
 export const revalidate = false;
 
@@ -13,6 +12,7 @@ export async function GET(
   const page = source.getPage(slug.slice(0, -1));
   if (!page) notFound();
 
+  const isDocsHome = page.url === "/docs";
   const { title } = page.data;
 
   return new ImageResponse(
@@ -65,43 +65,87 @@ export async function GET(
           justifyContent: "space-between",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-            marginBottom: "40px",
-            textWrap: "pretty",
-          }}
-        >
-          <span
+        {isDocsHome ? (
+          <div
             style={{
-              fontSize: 28,
-              color: "#a1a1aa",
-              fontWeight: 400,
-              lineHeight: 1.4,
-              maxWidth: "95%",
-              letterSpacing: "-0.01em",
-              lineClamp: 2,
-              textOverflow: "ellipsis",
-              overflow: "hidden",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              marginBottom: "40px",
+              textWrap: "pretty",
             }}
           >
-            Documentation
-          </span>
-          <span
+            <span
+              style={{
+                fontSize: 88,
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: "-0.04em",
+                color: "#1a1523",
+                marginLeft: -4,
+                maxWidth: 820,
+                textWrap: "pretty",
+              }}
+            >
+              Zen Router
+            </span>
+            <span
+              style={{
+                fontSize: 42,
+                color: "#a1a1aa",
+                fontWeight: 400,
+                lineHeight: 1.4,
+                letterSpacing: "-0.01em",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                maxWidth: 780,
+                textWrap: "pretty",
+              }}
+            >
+              An opinionated HTTP router for Cloudflare Workers, Node.js, Bun
+            </span>
+          </div>
+        ) : (
+          <div
             style={{
-              fontSize: 88,
-              fontWeight: 700,
-              lineHeight: 1.1,
-              letterSpacing: "-0.04em",
-              color: "#1a1523",
-              marginLeft: -4,
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              marginBottom: "40px",
+              textWrap: "pretty",
             }}
           >
-            {title}
-          </span>
-        </div>
+            <span
+              style={{
+                fontSize: 28,
+                color: "#a1a1aa",
+                fontWeight: 400,
+                lineHeight: 1.4,
+                maxWidth: "95%",
+                letterSpacing: "-0.01em",
+                lineClamp: 2,
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+              }}
+            >
+              Documentation
+            </span>
+            <span
+              style={{
+                fontSize: 88,
+                fontWeight: 700,
+                lineHeight: 1.1,
+                letterSpacing: "-0.04em",
+                color: "#1a1523",
+                marginLeft: -4,
+                maxWidth: 820,
+                textWrap: "pretty",
+              }}
+            >
+              {title}
+            </span>
+          </div>
+        )}
 
         <div
           style={{
