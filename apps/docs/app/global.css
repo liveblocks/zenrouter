@@ -33,6 +33,8 @@ a {
   --color-fd-accent: #e8e7e9;
   --color-fd-accent-foreground: #161618;
   --color-fd-ring: #6651c2;
+  --default-mono-font-family:
+    var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 .dark {
