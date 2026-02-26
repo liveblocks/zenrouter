@@ -2,6 +2,29 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
+body {
+  font-feature-settings: "cv01", "ss03";
+  font-variation-settings: "opsz" auto;
+  letter-spacing: -0.008em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  text-decoration-skip-ink: none;
+  text-decoration-thickness: 0.5px;
+}
+
+/* Don't scroll code blocks vertically, show full height */
+.max-h-\[600px\] {
+  max-height: none;
+}
+
+/* Sidebar separator labels (e.g. "Features") */
+aside p.inline-flex {
+  font-weight: 600;
+}
+
 /* Pierre: Feel free to edit these theme variables */
 @theme {
   --color-fd-background: hsl(0, 0%, 96%);
