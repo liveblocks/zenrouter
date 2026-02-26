@@ -1,0 +1,48 @@
+---
+title: Principles
+description: The design principles behind Zen Router.
+---
+
+Zen Router is an opinionated router. These are the principles that underlie its
+API design.
+
+## Pragmatic
+
+- Implementing real-world endpoints should be **joyful**, **easy**, and
+  **type-safe**.
+- All requests and responses are **JSON by default**.
+- You can _throw_ any HTTP error to short-circuit a non-2xx response.
+- JSON error responses for all common HTTP status codes, customizable per
+  status code.
+- All error responses have at least an `{ error }` key with
+  a human-readable string.
+- **CORS support is built-in** with a sane `{ cors: true }` default that
+  applies to all endpoints in the router. `OPTIONS` routes and responses are
+  managed automatically.
+
+## Secure by default
+
+- All requests must be authorized. **Authorization is opt-out, not opt-in.**
+- All **path params are verified and type-safe** (`/foo/<bar>/<qux>` available as
+  `p.bar` and `p.qux`), cannot be empty, and are URI-decoded automatically.
+- Incoming JSON on POST requests **must be validated**, and are made available
+  as a fully type-safe `body` in the handler.
+- All query strings are type-safely accessible (`/foo?abc=hi` as `q.abc`).
+
+## Maintainable
+
+- All route patterns are **fully qualified, and thus
+  [greppable](https://morizbuesing.com/blog/greppability-code-metric/)**. No
+  "base" prefix URL setup, which in practice makes codebases harder to navigate
+  over time.
+- Routes always **include the method in their definition**, so `"POST
+/api/posts"` instead of `.post("/api/posts")`. There is no such thing as
+  `.all("/api/posts")`.
+- **No middlewares.** Middlewares are easy to bolt on but get harder to trace in
+  large codebases over time: which ones are active, what do they do, what did
+  they attach to the request object? Zen Router replaces all of that with
+  a single request context (`ctx`) that carries data alongside a request.
+  Figuring out where contextual data comes from is one "Jump to definition"
+  away.
+- Default error handling is **configurable per status code**; individual handlers
+  can always bypass it by throwing a custom Response.
