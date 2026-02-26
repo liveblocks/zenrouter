@@ -23,6 +23,7 @@ a {
   --color-fd-foreground: #1a1523;
   --color-fd-muted: #1616180a;
   --color-fd-muted-foreground: #57565d;
+  --color-fd-extra-muted-foreground: #d1d1d2;
   --color-fd-popover: #fdfcfd;
   --color-fd-popover-foreground: #1a1523;
   --color-fd-card: #1616180a;
@@ -56,6 +57,7 @@ a {
   --color-fd-foreground: #edecee;
   --color-fd-muted: #fdfcfd08;
   --color-fd-muted-foreground: #a1a0a7;
+  --color-fd-extra-muted-foreground: #505050;
   --color-fd-popover: #1d1d20;
   --color-fd-popover-foreground: #edecee;
   --color-fd-card: #fdfcfd08;
@@ -163,4 +165,12 @@ aside p.inline-flex {
 /* Highlighted sidebar elements */
 #nd-sidebar a[data-active="true"] {
   font-weight: 600;
+}
+
+/* Inline links */
+.prose
+  :where(a:not([data-card])):not(
+    :where([class~="not-prose"], [class~="not-prose"] *)
+  ) {
+  text-decoration-color: var(--color-fd-extra-muted-foreground) !important;
 }
