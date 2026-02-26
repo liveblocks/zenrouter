@@ -44,7 +44,7 @@ There is **no implicit fall-through** between routers. This is a [core
 principle](/docs/principles#maintainable).
 
 For example, if a request is made to `/api/admin/users/123`, only the
-`/api/admin/*` router will ever see it. If that router doesn't have a matching
+`/api/admin/*` router will ever see it. If that router doesn’t have a matching
 route handler, it will return 404. The `/api/*` router will deliberately
 **not** get a chance to handle it. Each router has its own auth and error
 handling behavior, so routers are fully isolated from each other.
@@ -52,5 +52,5 @@ handling behavior, so routers are fully isolated from each other.
 ## Keep it flat
 
 The encouraged pattern is a single `ZenRelay` layer at the top level,
-dispatching to one set of `ZenRouter` instances. Don't nest relays or routers.
+dispatching to one set of `ZenRouter` instances. Don’t nest relays or routers.
 It only makes the routing harder to follow.

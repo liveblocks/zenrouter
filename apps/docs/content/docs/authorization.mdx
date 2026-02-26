@@ -46,7 +46,7 @@ zen.route("POST /api/webhooks/stripe", ...);
 ```
 
 <Callout type="info">
-  If most routes require auth but a few don't, split the public ones into a
+  If most routes require auth but a few don’t, split the public ones into a
   separate, isolated `ZenRouter` instance and then [compose them
   together](/docs/composing-routers).
 </Callout>
@@ -83,7 +83,7 @@ zen.route(
 ```
 
 Use context for static metadata like database connections or loggers. Do not
-use it for auth: that's what the mandatory `authorize` is for.
+use it for auth: that’s what the mandatory `authorize` is for.
 
 See the [Request lifecycle](/docs/request-lifecycle) for a full overview of how
 a request flows through the router.

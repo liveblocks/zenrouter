@@ -26,7 +26,7 @@ zen.route(
 
 `abort()` throws internally and never returns. By default, it produces a JSON
 response like `{ "error": "Not Found" }` using the standard message for the
-status code. You can customize the error shape with the router's error handler
+status code. You can customize the error shape with the router’s error handler
 (see below).
 
 ## Default error shape
@@ -50,7 +50,7 @@ For validation errors (422), a `reason` field is included with details:
 
 Use `onError` to customize the error response shape for all HTTP errors. For
 example, when `abort(404)` is called, `.onError()` will get called with an
-error object containing `{ status: 404, message: 'Not Found' }`:
+error object containing `{ status: 404, message: "Not Found" }`:
 
 ```ts
 zen.onError((error, { req, ctx }) => {
@@ -106,7 +106,7 @@ aborts under these conditions:
 | **400** Bad Request           | Path params are malformed or fail validation |
 | **403** Forbidden             | `authorize` returns a falsy value            |
 | **404** Not Found             | No route matches the URL                     |
-| **405** Method Not Allowed    | URL matches but HTTP method doesn't          |
+| **405** Method Not Allowed    | URL matches but HTTP method doesn’t          |
 | **422** Unprocessable Entity  | Request body fails schema validation         |
 | **500** Internal Server Error | Uncaught error in a handler                  |
 

@@ -50,9 +50,9 @@ All route paths are **fully qualified and
 [greppable](https://morizbuesing.com/blog/greppability-code-metric/)**. This is
 one of the [core principles](/docs/principles#maintainable).
 
-If a request is made to a URL that doesn't match any route, Zen Router returns
+If a request is made to a URL that doesn’t match any route, Zen Router returns
 `404 Not Found`. If a request is made to a _path_ that exists but with a method
-that isn't defined, Zen Router will automatically return the correct `405
+that isn’t defined, Zen Router will automatically return the correct `405
 Method Not Allowed` response.
 
 ## Param decoders
@@ -132,8 +132,8 @@ color.
 
 To validate a request body, pass a schema as the second argument to `.route()`.
 The body is validated before your handler runs, so `body` is already parsed and
-fully typed. If you don't provide a schema, `body` is typed as `never` so
-TypeScript won't let you access it. Accessing it at runtime throws an error.
+fully typed. If you don’t provide a schema, `body` is typed as `never` so
+TypeScript won’t let you access it. Accessing it at runtime throws an error.
 
 ```ts tab="zod"
 import { z } from "zod";
@@ -194,7 +194,7 @@ zen.route(
   "POST /api/posts",
 
   // [!code highlight]
-  z.unknown(), // Don't validate but keep body accessible
+  z.unknown(), // Don’t validate but keep body accessible
 
   async ({ body }) => {
     // [!code highlight]
@@ -209,11 +209,11 @@ For use on Cloudflare Workers, we recommend
 [decoders](https://decoders.cc/) for its smaller bundle size and better error
 messages.
 
-If the body doesn't match the schema, Zen Router returns
+If the body doesn’t match the schema, Zen Router returns
 `422 Unprocessable Entity` with a human-readable error message. See the [Request lifecycle](/docs/request-lifecycle).
 
 <Callout type="info">
-  Body validation is not tied to any specific HTTP method. It's based on arity:
+  Body validation is not tied to any specific HTTP method. It’s based on arity:
   if you pass 3 arguments to `.route()`, the second is treated as a body schema.
   This is typically used with `POST`, `PUT`, or `PATCH`, but works with any
   method.
