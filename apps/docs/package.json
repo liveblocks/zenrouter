@@ -11,7 +11,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@radix-ui/react-tabs": "^1.1.13",
     "@takumi-rs/image-response": "^0.68.17",
+    "class-variance-authority": "^0.7.1",
     "fumadocs-core": "16.6.5",
     "fumadocs-mdx": "14.2.8",
     "fumadocs-ui": "16.6.5",

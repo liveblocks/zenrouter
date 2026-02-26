@@ -15,16 +15,6 @@ a {
   text-decoration-thickness: 0.5px;
 }
 
-/* Don't scroll code blocks vertically, show full height */
-.max-h-\[600px\] {
-  max-height: none;
-}
-
-/* Sidebar separator labels (e.g. "Features") */
-aside p.inline-flex {
-  font-weight: 600;
-}
-
 /* Using colours from the Liveblocks product palette */
 @theme {
   --color-fd-background: #fdfcfd;
@@ -42,7 +32,7 @@ aside p.inline-flex {
   --color-fd-secondary-foreground: red; /* ? */
   --color-fd-accent: #e8e7e9;
   --color-fd-accent-foreground: #161618;
-  --color-fd-ring: green; /* ? */
+  --color-fd-ring: #6651c2;
 }
 
 .dark {
@@ -61,5 +51,15 @@ aside p.inline-flex {
   --color-fd-secondary-foreground: red; /* ? */
   --color-fd-accent: #2e2e33;
   --color-fd-accent-foreground: #fdfcfd;
-  --color-fd-ring: green; /* ? */
+  --color-fd-ring: #9f8dfc;
+}
+
+/* Don't scroll code blocks vertically, show full height */
+.max-h-\[600px\] {
+  max-height: none;
+}
+
+/* Sidebar separator labels (e.g. "Features") */
+aside p.inline-flex {
+  font-weight: 600;
 }
