@@ -286,7 +286,7 @@ export default zen;
 
 ## Features
 
-- [Type-safe everywhere](/docs/routes). Path params (`p`), query strings (`q`), and request bodies (`body`) are all fully typed.
+- [Type-safe everywhere](/docs/routes). Your handler receives `{ p, q, body }`, all fully typed.
 - [Body validation](/docs/routes#body-validation). With any [Standard Schema](https://standardschema.dev/) compatible library.
 - [Authorization](/docs/authorization). Mandatory by design, opt-out for public routes.
 - [Composing routers](/docs/composing-routers). Isolate routers by auth strategy with `ZenRelay`.
