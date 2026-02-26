@@ -242,8 +242,8 @@ Every route handler receives a single object with the following properties:
 | -------- | ---------------------------------------------------- |
 | `req`    | The original, unmodified Request                     |
 | `url`    | Parsed URL (equivalent to `new URL(req.url)`)        |
-| `ctx`    | Value returned by your `getContext` (TODO LINK HERE) |
-| `auth`   | Value returned by your `authorize` (TODO LINK HERE)  |
+| `ctx`    | Value returned by your [`getContext`](/docs/authorization#the-getcontext-function) |
+| `auth`   | Value returned by your [`authorize`](/docs/authorization#the-authorize-function)  |
 | `p`      | Typed route params                                   |
 | `q`      | Query string params                                  |
 | `body`   | Validated request body (if schema is provided)       |
