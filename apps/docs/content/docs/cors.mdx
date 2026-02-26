@@ -1,0 +1,78 @@
+---
+title: CORS
+description: Built-in CORS support with sensible defaults.
+---
+
+When you enable CORS on a router, Zen Router does two things:
+
+1. **Handles `OPTIONS` preflight requests automatically.** Browsers send these
+   before making certain cross-origin requests. Zen Router responds with `204`
+   and the correct `Access-Control-*` headers.
+2. **Adds CORS headers to all responses.** So the browser allows your
+   JavaScript to read the response.
+
+## Do I need CORS?
+
+You only need to enable CORS if your routes are going to be called from
+a browser with JavaScript running on a different origin (e.g. your frontend at
+`app.example.com` calls your API at `api.example.com`). Without CORS, the
+browser will block those requests.
+
+You do not need CORS if your routes are only called from other backend servers,
+or if they're on the same origin as your frontend (e.g. your frontend and API
+are both at `example.com`).
+
+## Enabling CORS
+
+Pass `cors: true` to the router to enable CORS with sensible defaults across all
+routes.
+
+{/* prettier-ignore */}
+```ts
+const zen = new ZenRouter({
+  authorize: () => { /* ... */ },
+  // [!code highlight]
+  cors: true,
+});
+```
+
+CORS is configured per-router, not per-route. With Zen Router, routes with
+similar requirements and behavior are [grouped in the same
+router](/docs/composing-routers) already, so this is almost always what you
+want. For example, typically only your public API router needs CORS since it’s
+the only one browsers talk to directly.
+
+## Custom configuration
+
+For more control, pass a configuration object:
+
+{/* prettier-ignore */}
+```ts
+const zen = new ZenRouter({
+  authorize: () => { /* ... */ },
+  // [!code highlight]
+  cors: {
+    // [!code highlight]
+    allowedOrigins: ["https://example.com", "https://app.example.com"],
+    // [!code highlight]
+    allowCredentials: true,
+    // [!code highlight]
+    exposeHeaders: ["X-Request-Id"],
+    // [!code highlight]
+    maxAge: 86400,
+    // [!code highlight]
+  },
+});
+```
+
+| Option             | Default | Description                                                                              |
+| ------------------ | ------- | ---------------------------------------------------------------------------------------- |
+| `allowedOrigins`   | `"*"`   | Which origins are allowed. `"*"` allows any origin.                                      |
+| `allowedMethods`   | All     | Which methods to allow, e.g. `["GET", "POST"]`                                           |
+| `allowedHeaders`   | `"*"`   | Which headers browsers may include in **requests**, e.g. `["X-Acme-Id"]`.                |
+| `allowCredentials` | `false` | Whether to allow cookies and TLS client certificates.                                    |
+| `exposeHeaders`    | `[]`    | Which **response** headers browser scripts can access, e.g. `["X-RateLimit-Remaining"]`. |
+| `maxAge`           | —       | How long (in seconds) browsers may cache preflight responses.                            |
+| `sendWildcard`     | `false` | Send `*` instead of echoing back the Origin. Cannot be used with `allowCredentials`.     |
+| `alwaysSend`       | `true`  | Send CORS headers even if the request has no `Origin` header.                            |
+| `varyHeader`       | `true`  | Add `Vary: Origin` header to responses.                                                  |

@@ -5,6 +5,8 @@
     "routes",
     "authorization",
     "composing-routers",
+    "---Features---",
+    "cors",
     "---Runtimes---",
     "runtime-guides",
     "---Misc---",
