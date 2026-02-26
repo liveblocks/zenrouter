@@ -301,22 +301,7 @@ zen.route(
 );
 ```
 
-```ts tab="HttpError"
-import { HttpError } from "@liveblocks/zenrouter";
-
-zen.route(
-  "GET /example",
-
-  () => {
-    // Prefer abort() when possible
-    throw new HttpError(404, "Huh?");
-  }
-);
-```
-
 ```ts tab="Error"
-import { HttpError } from "@liveblocks/zenrouter";
-
 zen.route(
   "GET /example",
 

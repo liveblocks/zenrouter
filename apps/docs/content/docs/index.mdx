@@ -31,7 +31,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -73,7 +73,7 @@ import { z } from "zod";
 
 const zen = new ZenRouter({
   // [!code highlight]
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization"); // [!code highlight]
     const currentUser = await db.getUserByToken(token); // [!code highlight]
     if (!currentUser) return false; // [!code highlight]
@@ -117,7 +117,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -161,7 +161,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -204,7 +204,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { object, string } from "decoders";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -246,7 +246,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
