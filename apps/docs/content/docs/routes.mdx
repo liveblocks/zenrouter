@@ -127,22 +127,6 @@ If any param fails this validation, a `400 Bad Request` will be returned. See
 the [Request lifecycle](/docs/request-lifecycle).  
 For example, a request to `/api/posts/123/tag/yellow`, because `yellow` is not a valid tag.
 
-## Query strings
-
-Query string parameters are available via `q`. They are always optional strings.
-
-```ts
-// GET /api/posts?sort=newest&limit=10
-zen.route("GET /api/posts", ({ q }) => {
-  // q.sort  = "newest"
-  // q.limit = "10"
-  // q.other = undefined
-});
-```
-
-If a query param appears multiple times, only the first value is captured. For
-full control, use `url.searchParams` directly.
-
 ## Body validation
 
 To validate a request body, pass a schema as the second argument to `.route()`.
@@ -233,6 +217,22 @@ If the body doesn't match the schema, Zen Router returns
   This is typically used with `POST`, `PUT`, or `PATCH`, but works with any
   method.
 </Callout>
+
+## Query strings
+
+Query string parameters are available via `q`. They are always optional strings.
+
+```ts
+// GET /api/posts?sort=newest&limit=10
+zen.route("GET /api/posts", ({ q }) => {
+  // q.sort  = "newest"
+  // q.limit = "10"
+  // q.other = undefined
+});
+```
+
+If a query param appears multiple times, only the first value is captured. For
+full control, use `url.searchParams` directly.
 
 ## Handler arguments
 
