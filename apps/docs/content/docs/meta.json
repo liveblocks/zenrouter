@@ -1,6 +1,8 @@
 {
   "pages": [
     "index",
+    "---Features---",
+    "routes",
     "---Misc---",
     "principles",
     "request-lifecycle"

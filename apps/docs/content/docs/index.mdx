@@ -4,9 +4,9 @@ description: An opinionated HTTP router with typed path params, built-in body va
 ---
 
 Zen Router is an opinionated API router built by
-[Liveblocks](https://liveblocks.io), powering billions of requests per month.
-It's designed for Cloudflare Workers, Bun, Node.js, and every other modern
-JavaScript runtime.
+[Liveblocks](https://liveblocks.io), where it has been powering billions of
+requests per month. It's designed for Cloudflare Workers, Bun, Node.js, and
+every other modern JavaScript runtime.
 
 ```bash tab="npm"
 npm install @liveblocks/zenrouter
@@ -286,11 +286,11 @@ export default zen;
 
 ## Features
 
-- [Type-safe all around](/docs/todo) — path params (`p`), query strings (`q`), and request bodies (`body`) are all fully typed
-- [Body validation](/docs/todo) — with Zod, [decoders](https://decoders.cc/), or any [Standard Schema](https://github.com/standard-schema/standard-schema) library
-- [Authorization](/docs/todo) — mandatory by design, opt-out for public routes
-- [Route groups](/docs/todo) — isolate routers by auth strategy with `ZenRelay`
-- [CORS](/docs/todo) — built-in, not bolted on
-- [Error handling](/docs/todo) — `abort(404)` from any handler, customizable error shapes
-- [Response helpers](/docs/todo) — `json()`, `html()`, `empty()`, `textStream()`, and more
-- [OpenTelemetry](/docs/todo) — automatic span attributes for matched routes
+- [Type-safe everywhere](/docs/routes). Path params (`p`), query strings (`q`), and request bodies (`body`) are all fully typed.
+- [Body validation](/docs/routes#body-validation). With any [Standard Schema](https://standardschema.dev/) compatible library.
+- [Authorization](/docs/todo). Mandatory by design, opt-out for public routes.
+- [Route groups](/docs/todo). Isolate routers by auth strategy with `ZenRelay`.
+- [CORS](/docs/todo). Built-in, not bolted on.
+- [Error handling](/docs/todo). `abort(404)` from any handler, customizable error shapes.
+- [Response helpers](/docs/todo). `json()`, `html()`, `empty()`, `textStream()`, and more.
+- [OpenTelemetry](/docs/todo). Automatic span attributes for matched routes.

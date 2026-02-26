@@ -1,0 +1,324 @@
+---
+title: Defining routes
+description: Route patterns, path params, query strings, and body validation.
+---
+
+Routes are defined with a single string containing the HTTP method and the full
+path:
+
+```ts tab="Route params"
+zen.route(
+  "GET /hello/<name>",
+
+  ({ p }) => `Hello, ${p.name}!`
+);
+```
+
+```ts tab="Type-safe"
+zen.route(
+  "GET /hello/<name>",
+
+  ({ p }) => `Hello, ${p.nam}!`
+  //                     ~~~ Property 'nam' does not exist on type '{ name: string }'
+);
+```
+
+```ts tab="Auto URI-decoding"
+zen.route(
+  "GET /hello/<name>", // e.g. /hello/Jos%C3%A9%20Fran%C3%A7ois
+
+  ({ p }) => `Hello, ${p.name}!` // Hello, José François!
+);
+```
+
+Route params are enclosed in angle brackets. They are automatically URI-decoded
+and cannot be empty or optional.
+
+Multiple params work as expected:
+
+```ts
+zen.route(
+  "GET /api/rooms/<roomId>/users/<userId>",
+
+  async ({ p }) => {
+    // p.roomId and p.userId are both typed strings
+  }
+);
+```
+
+All route paths are **fully qualified and
+[greppable](https://morizbuesing.com/blog/greppability-code-metric/)**. This is
+one of the [core principles](/docs/principles#maintainable).
+
+If a request is made to a URL that doesn't match any route, Zen Router returns
+`404 Not Found`. If a request is made to a _path_ that exists but with a method
+that isn't defined, Zen Router will automatically return the correct `405
+Method Not Allowed` response.
+
+## Param decoders
+
+By default, all path params will get exposed as strings in `p`.
+This is a good default since path params
+are strings.
+If you want, however, you can limit their allowed inputs or
+convert them to other types (e.g. numbers, enums, etc.).
+You can register custom param decoders
+at the router level using any
+[Standard Schema](https://standardschema.dev/) compatible
+library:
+
+```ts tab="zod"
+import { z } from "zod";
+
+const zen = new ZenRouter({
+  authorize,
+  params: {
+    index: z.coerce.number(),
+    color: z.enum(["red", "green", "blue"]),
+  },
+});
+
+zen.route(
+  "GET /api/posts/<postId>/authors/<index>",
+  //               ^^^^^^           ^^^^^
+  //               string           number
+
+  ({ p }) => ...
+);
+
+zen.route(
+  "POST /api/posts/<postId>/tag/<color>",
+  //                ^^^^^^       ^^^^^
+  //                string       'red' | 'green' | 'blue'
+
+  ({ p }) => ...
+);
+```
+
+```ts tab="decoders"
+import { numeric, oneOf } from "decoders";
+
+const zen = new ZenRouter({
+  authorize,
+  params: {
+    index: numeric,
+    color: oneOf(["red", "green", "blue"]),
+  },
+});
+
+zen.route(
+  "GET /api/posts/<postId>/authors/<index>",
+  //               ^^^^^^           ^^^^^
+  //               string           number
+
+  ({ p }) => ...
+);
+
+zen.route(
+  "POST /api/posts/<postId>/tag/<color>",
+  //                ^^^^^^       ^^^^^
+  //                string       'red' | 'green' | 'blue'
+
+  ({ p }) => ...
+);
+```
+
+If any param fails this validation, a `400 Bad Request` will be returned. See
+the [Request lifecycle](/docs/request-lifecycle).  
+For example, a request to `/api/posts/123/tag/yellow`, because `yellow` is not a valid tag.
+
+## Query strings
+
+Query string parameters are available via `q`. They are always optional strings.
+
+```ts
+// GET /api/posts?sort=newest&limit=10
+zen.route("GET /api/posts", ({ q }) => {
+  // q.sort  = "newest"
+  // q.limit = "10"
+  // q.other = undefined
+});
+```
+
+If a query param appears multiple times, only the first value is captured. For
+full control, use `url.searchParams` directly.
+
+## Body validation
+
+To validate a request body, pass a schema as the second argument to `.route()`.
+The body is validated before your handler runs, so `body` is already parsed and
+fully typed. If you don't provide a schema, `body` is typed as `never` so
+TypeScript won't let you access it. Accessing it at runtime throws an error.
+
+```ts tab="zod"
+import { z } from "zod";
+
+zen.route(
+  "POST /api/posts",
+
+  // [!code highlight]
+  z.object({ title: z.string() }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      // [!code highlight]
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+```
+
+```ts tab="decoders"
+import { object, string } from "decoders";
+
+zen.route(
+  "POST /api/posts",
+
+  // [!code highlight]
+  object({ title: string }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      // [!code highlight]
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+    return { id: post.id, title: post.title };
+  }
+);
+```
+
+```ts tab="No body"
+zen.route(
+  "GET /api/posts",
+
+  async ({ auth, body }) => {
+    // [!code highlight]
+    body; // ← TypeScript error: Property 'body' is typed as 'never'
+  }
+);
+```
+
+```ts tab="Bypass"
+zen.route(
+  "POST /api/posts",
+
+  z.unknown(), // Skips validation but keeps body accessible
+
+  async ({ auth, body }) => {
+    // [!code highlight]
+    // body is typed as unknown
+  }
+);
+```
+
+Zen Router supports any validation library that implements the
+[Standard Schema](https://standardschema.dev/) spec.
+For use on Cloudflare Workers, we recommend
+[decoders](https://decoders.cc/) for its smaller bundle size and better error
+messages.
+
+If the body doesn't match the schema, Zen Router returns
+`422 Unprocessable Entity` with a human-readable error message. See the [Request lifecycle](/docs/request-lifecycle).
+
+<Callout type="tip">
+  Body validation is not tied to any specific HTTP method. It's based on arity:
+  if you pass 3 arguments to `.route()`, the second is treated as a body schema.
+  This is typically used with `POST`, `PUT`, or `PATCH`, but works with any
+  method.
+</Callout>
+
+## Handler arguments
+
+Every route handler receives a single object with the following properties:
+
+| Property | Description                                          |
+| -------- | ---------------------------------------------------- |
+| `req`    | The original, unmodified Request                     |
+| `url`    | Parsed URL (equivalent to `new URL(req.url)`)        |
+| `ctx`    | Value returned by your `getContext` (TODO LINK HERE) |
+| `auth`   | Value returned by your `authorize` (TODO LINK HERE)  |
+| `p`      | Typed route params                                   |
+| `q`      | Query string params                                  |
+| `body`   | Validated request body (if schema is provided)       |
+
+## Return values
+
+Handlers can return a JSON object and Zen Router will serialize it with a `200`
+status automatically. It [must be an object](/docs/principles#maintainable), not
+an array or scalar. For other response types, see [response
+helpers](/docs/response-helpers).
+
+```ts tab="Simple value"
+zen.route(
+  "GET /example",
+
+  () => {
+    // Returning a simple object → JSON response
+    return { items: [1, 2, 3] };
+  }
+);
+```
+
+```ts tab="json"
+import { json } from "@liveblocks/zenrouter";
+
+zen.route(
+  "GET /example",
+
+  // Explicit JSON response
+  () => json({ items: [1, 2, 3] })
+);
+```
+
+```ts tab="Request"
+zen.route(
+  "GET /example",
+
+  () => {
+    // Full control over the response
+    return new Response(JSON.stringify({ items: [1, 2, 3] }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+);
+```
+
+```ts tab="abort"
+zen.route(
+  "GET /example",
+
+  () => {
+    // Returns → 404 Not Found with body { "error": "Not Found" }
+    abort(404); // Recommended
+  }
+);
+```
+
+```ts tab="HttpError"
+import { HttpError } from "@liveblocks/zenrouter";
+
+zen.route(
+  "GET /example",
+
+  () => {
+    // Prefer abort() when possible
+    throw new HttpError(404, "Huh?");
+  }
+);
+```
+
+```ts tab="Error"
+import { HttpError } from "@liveblocks/zenrouter";
+
+zen.route(
+  "GET /example",
+
+  () => {
+    // Returns → 500 Internal Server Error with body { "error": "Internal Server Error" }
+    throw new Error("Oops");
+  }
+);
+```
