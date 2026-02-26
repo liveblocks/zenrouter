@@ -194,9 +194,12 @@ zen.route(
 zen.route(
   "GET /api/posts",
 
-  async ({ auth, body }) => {
+  // [!code highlight]
+  /* no validator here as 2nd param */
+
+  async ({ body }) => {
     // [!code highlight]
-    body; // ← TypeScript error: Property 'body' is typed as 'never'
+    // body is typed as 'never'
   }
 );
 ```
@@ -205,11 +208,12 @@ zen.route(
 zen.route(
   "POST /api/posts",
 
-  z.unknown(), // Skips validation but keeps body accessible
+  // [!code highlight]
+  z.unknown(), // Don't validate but keep body accessible
 
-  async ({ auth, body }) => {
+  async ({ body }) => {
     // [!code highlight]
-    // body is typed as unknown
+    // body is typed as 'unknown'
   }
 );
 ```
