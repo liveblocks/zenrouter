@@ -1,0 +1,126 @@
+---
+title: Supported runtimes
+description: How to run Zen Router on Cloudflare Workers, Bun, and other runtimes.
+---
+
+Both `ZenRouter` and `ZenRelay` expose a `.fetch` method that is a standard
+`(request: Request) => Promise<Response>` handler. This makes them compatible
+with any runtime that supports the Web `Request`/`Response` API.
+
+## Cloudflare Workers
+
+Simple! Just export the router as the default export. Cloudflare Workers calls
+`.fetch` automatically.
+
+```ts tab="Single router" title="src/worker.ts"
+import { ZenRouter } from "@liveblocks/zenrouter";
+
+const zen = new ZenRouter({ ... });
+
+zen.route("GET /api/health", () => ({ status: "ok" }));
+zen.route("GET /api/posts/<postId>", async ({ p }) => { ... });
+zen.route("POST /api/posts", bodySchema, async ({ body }) => { ... });
+
+// [!code highlight]
+// Just use a default export in your worker file
+// [!code highlight]
+export default zen;
+```
+
+```ts tab="Multiple routers" title="src/worker.ts"
+import { ZenRelay } from "@liveblocks/zenrouter";
+
+import { zen as authRoutes } from "./routes/auth";
+import { zen as apiRoutes } from "./routes/api";
+import { zen as adminRoutes } from "./routes/admin";
+
+const app = new ZenRelay();
+app.relay("/auth/*", authRoutes);
+app.relay("/api/admin/*", adminRoutes);
+app.relay("/api/*", apiRoutes);
+
+// [!code highlight]
+// Just use a default export in your worker file
+// [!code highlight]
+export default app;
+```
+
+## Bun
+
+Simple! Just pass `.fetch` to `Bun.serve()`:
+
+```ts tab="Single router" title="src/index.ts"
+import { ZenRouter } from "@liveblocks/zenrouter";
+
+const zen = new ZenRouter({ ... });
+
+zen.route("GET /api/health", () => ({ status: "ok" }));
+zen.route("GET /api/posts/<postId>", async ({ p }) => { ... });
+zen.route("POST /api/posts", bodySchema, async ({ body }) => { ... });
+
+// [!code highlight]
+// Pass zen.fetch to Bun.serve()
+// [!code highlight]
+Bun.serve({ fetch: zen.fetch, port: 8000 });
+```
+
+```ts tab="Multiple routers" title="src/index.ts"
+import { ZenRelay } from "@liveblocks/zenrouter";
+
+import { zen as authRoutes } from "./routes/auth";
+import { zen as apiRoutes } from "./routes/api";
+import { zen as adminRoutes } from "./routes/admin";
+
+const app = new ZenRelay();
+app.relay("/auth/*", authRoutes);
+app.relay("/api/admin/*", adminRoutes);
+app.relay("/api/*", apiRoutes);
+
+// [!code highlight]
+// Pass app.fetch to Bun.serve()
+// [!code highlight]
+Bun.serve({ fetch: app.fetch, port: 8000 });
+```
+
+## Node.js
+
+Node uses `IncomingMessage`/`ServerResponse` instead of the Web
+`Request`/`Response` API, so you need an adapter. We recommend
+[`@whatwg-node/server`](https://www.npmjs.com/package/@whatwg-node/server):
+
+```ts tab="Single router" title="src/index.ts"
+import { createServer } from "node:http";
+import { createServerAdapter } from "@whatwg-node/server";
+import { ZenRouter } from "@liveblocks/zenrouter";
+
+const zen = new ZenRouter({ ... });
+
+zen.route("GET /api/health", () => ({ status: "ok" }));
+zen.route("GET /api/posts/<postId>", async ({ p }) => { ... });
+zen.route("POST /api/posts", bodySchema, async ({ body }) => { ... });
+
+// [!code highlight]
+const server = createServer(createServerAdapter(zen.fetch));
+// [!code highlight]
+server.listen(8000);
+```
+
+```ts tab="Multiple routers" title="src/index.ts"
+import { createServer } from "node:http";
+import { createServerAdapter } from "@whatwg-node/server";
+import { ZenRelay } from "@liveblocks/zenrouter";
+
+import { zen as authRoutes } from "./routes/auth";
+import { zen as apiRoutes } from "./routes/api";
+import { zen as adminRoutes } from "./routes/admin";
+
+const app = new ZenRelay();
+app.relay("/auth/*", authRoutes);
+app.relay("/api/admin/*", adminRoutes);
+app.relay("/api/*", apiRoutes);
+
+// [!code highlight]
+const server = createServer(createServerAdapter(app.fetch));
+// [!code highlight]
+server.listen(8000);
+```

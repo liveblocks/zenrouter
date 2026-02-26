@@ -7,6 +7,8 @@
     "composing-routers",
     "---Features---",
     "cors",
+    "opentelemetry",
+    "supported-runtimes",
     "---Misc---",
     "principles",
     "request-lifecycle"
