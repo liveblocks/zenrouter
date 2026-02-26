@@ -8,8 +8,8 @@ body {
   letter-spacing: -0.008em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --default-mono-font-family:
-    var(--font-jetbrains-mono), ui-monospace, monospace;
+  --default-mono-font-family: var(--font-jetbrains-mono), ui-monospace,
+    monospace;
 }
 
 a {
