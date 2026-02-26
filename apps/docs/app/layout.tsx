@@ -3,6 +3,7 @@ import "./global.css";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Metadata } from "next";
 import { TITLE_DESCRIPTION } from "./docs/[[...slug]]/page";
+import { getPageImage } from "@/lib/source";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,9 +15,16 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.BASE_URL!),
   title: TITLE_DESCRIPTION,
   description:
     "An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model. Compatible with Cloudflare Workers, Node.js, Bun, Deno, and other modern JavaScript runtimes. Built by Liveblocks.",
+  openGraph: {
+    images: "TODO",
+  },
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function Layout({ children }: LayoutProps<"/">) {
