@@ -1,0 +1,42 @@
+---
+title: OpenTelemetry
+description: Automatic span attributes for matched routes.
+---
+
+Zen Router can automatically set span attributes on the active OpenTelemetry
+span when a route matches. This gives you per-route observability with a single
+config option.
+
+Zen Router has no dependency on `@opentelemetry/api` itself. You provide the
+`getActiveSpan` function, so the coupling is entirely in your code.
+
+## Setup
+
+Pass an `otel` config with a `getActiveSpan` function:
+
+```ts
+// [!code highlight]
+import { trace } from "@opentelemetry/api";
+
+const zen = new ZenRouter({
+  authorize,
+  // [!code highlight]
+  otel: {
+    // [!code highlight]
+    getActiveSpan: () => trace.getActiveSpan(),
+    // [!code highlight]
+  },
+});
+```
+
+## Span attributes
+
+When a route matches, Zen Router sets these attributes on the active span:
+
+| Attribute          | Example                       | Description               |
+| ------------------ | ----------------------------- | ------------------------- |
+| `zen.route`        | `GET /api/posts/<postId>`     | The matched route pattern |
+| `zen.param.<name>` | `zen.param.postId = "abc123"` | Each decoded path param   |
+
+These attributes are set early in the request lifecycle, so they are recorded
+even if the request later fails due to auth or validation errors.
