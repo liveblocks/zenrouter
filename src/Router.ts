@@ -123,7 +123,7 @@ type RouterOptions<RC, AC, TParams extends Record<string, StandardSchemaV1>> = {
   getContext?: (req: Request, ...args: readonly any[]) => RC;
   authorize?: AuthFn<RC, AC>;
 
-  // Register any param decoders
+  // Route param schema
   params?: TParams;
 
   /**
@@ -155,7 +155,7 @@ export class ZenRouter<
   readonly #_contextFn: (req: Request, ...args: readonly any[]) => RC;
   readonly #_defaultAuthFn: AuthFn<RC, AC>;
   readonly #_routes: RouteTuple<RC, AC>[];
-  readonly #_paramDecoders: TParams;
+  readonly #_paramSchema: TParams;
   readonly #_errorHandler: ErrorHandler;
   readonly #_cors: Partial<CorsOptions> | null;
   readonly #_otel: OtelConfig | undefined;
@@ -172,7 +172,7 @@ export class ZenRouter<
         return abort(403);
       });
     this.#_routes = [];
-    this.#_paramDecoders = options?.params ?? ({} as TParams);
+    this.#_paramSchema = options?.params ?? ({} as TParams);
     this.#_cors = (options?.cors === true ? {} : options?.cors) || null;
     this.#_otel = options?.otel;
   }
@@ -389,7 +389,7 @@ export class ZenRouter<
         try {
           p = mapv(match, decodeURIComponent);
           p = mapv(p, (value, key) => {
-            const schema = this.#_paramDecoders[key];
+            const schema = this.#_paramSchema[key];
             if (!schema) return value;
             const result = validateSync(schema, value);
             if (result.issues) throw result.issues;
