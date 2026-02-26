@@ -12,6 +12,9 @@ import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/ai/page-actions";
 import { gitConfig } from "@/lib/layout.shared";
 
+export const TITLE_DESCRIPTION =
+  "Zen Router | An opinionated HTTP router compatible with Cloudflare Workers, Node.js, Bun, Deno.";
+
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
   const page = source.getPage(params.slug);
@@ -85,9 +88,11 @@ export async function generateMetadata(
   const page = source.getPage(params.slug);
   if (!page) notFound();
 
+  const isDocsHome = page.url === "/docs";
+
   return {
     metadataBase: new URL(process.env.BASE_URL!),
-    title: page.data.title,
+    title: isDocsHome ? TITLE_DESCRIPTION : `${page.data.title} | Zen Router`,
     description: page.data.description,
     openGraph: {
       images: getPageImage(page).url,
