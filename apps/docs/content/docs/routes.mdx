@@ -227,7 +227,7 @@ messages.
 If the body doesn't match the schema, Zen Router returns
 `422 Unprocessable Entity` with a human-readable error message. See the [Request lifecycle](/docs/request-lifecycle).
 
-<Callout type="tip">
+<Callout type="info">
   Body validation is not tied to any specific HTTP method. It's based on arity:
   if you pass 3 arguments to `.route()`, the second is treated as a body schema.
   This is typically used with `POST`, `PUT`, or `PATCH`, but works with any

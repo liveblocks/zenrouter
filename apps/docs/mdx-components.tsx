@@ -1,6 +1,7 @@
 import { ImageZoom } from "fumadocs-ui/components/image-zoom";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
+import { Callout } from "./components/callout";
 import {
   CodeBlock,
   CodeBlockTab,
@@ -14,6 +15,7 @@ import { Tabs } from "./components/tabs";
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
+    Callout,
     img: (props) => <ImageZoom {...(props as any)} />,
     CodeBlock,
     CodeBlockTab,

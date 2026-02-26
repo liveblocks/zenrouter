@@ -45,7 +45,7 @@ zen.route("GET /api/version", ...);
 zen.route("POST /api/webhooks/stripe", ...);
 ```
 
-<Callout type="idea">
+<Callout type="info">
   If most routes require auth but a few don't, split the public ones into a
   separate, isolated `ZenRouter` instance and then [compose them
   together](/docs/composing-routers).
