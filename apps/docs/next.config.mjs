@@ -17,6 +17,13 @@ const config = {
   serverExternalPackages: ["@takumi-rs/image-response"],
 
   reactStrictMode: true,
+  redirects: async () => [
+    {
+      source: "/",
+      destination: "/docs",
+      permanent: true,
+    },
+  ],
   async rewrites() {
     return [
       {
