@@ -6,6 +6,8 @@
     "authorization",
     "composing-routers",
     "---Features---",
+    "error-handling",
+    "response-helpers",
     "cors",
     "opentelemetry",
     "supported-runtimes",

@@ -31,7 +31,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -73,7 +73,7 @@ import { z } from "zod";
 
 const zen = new ZenRouter({
   // [!code highlight]
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization"); // [!code highlight]
     const currentUser = await db.getUserByToken(token); // [!code highlight]
     if (!currentUser) return false; // [!code highlight]
@@ -117,7 +117,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -161,7 +161,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -204,7 +204,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { object, string } from "decoders";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -246,7 +246,7 @@ import { ZenRouter } from "@liveblocks/zenrouter";
 import { z } from "zod";
 
 const zen = new ZenRouter({
-  authorize: async (req) => {
+  authorize: async ({ req }) => {
     const token = req.headers.get("Authorization");
     const currentUser = await db.getUserByToken(token);
     if (!currentUser) return false;
@@ -291,7 +291,7 @@ export default zen;
 - [Authorization](/docs/authorization). Mandatory by design, opt-out for public routes.
 - [Composing routers](/docs/composing-routers). Isolate routers by auth strategy with `ZenRelay`.
 - [CORS](/docs/cors). Built-in, not bolted on.
-- [Error handling](/docs/todo). `abort(404)` from any handler, customizable error shapes.
-- [Response helpers](/docs/todo). `json()`, `html()`, `empty()`, `textStream()`, and more.
+- [Error handling](/docs/error-handling). `abort(404)` from any handler, customizable error shapes.
+- [Response helpers](/docs/response-helpers). `json()`, `html()`, `textStream()`, and more.
 - [OpenTelemetry](/docs/opentelemetry). Automatic span attributes for matched routes.
 - [Runs anywhere](/docs/supported-runtimes). Cloudflare Workers, Bun, Node.js, and any runtime with Web `Request`/`Response`.

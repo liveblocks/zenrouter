@@ -8,8 +8,8 @@ body {
   letter-spacing: -0.008em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --default-mono-font-family:
-    var(--font-jetbrains-mono), ui-monospace, monospace;
+  --default-mono-font-family: var(--font-jetbrains-mono), ui-monospace,
+    monospace;
 }
 
 a {
@@ -124,6 +124,16 @@ a {
 /* Don't scroll code blocks vertically, show full height */
 .max-h-\[600px\] {
   max-height: none;
+}
+
+/* Function signature style (h3-like but not in TOC) */
+.fn-sig,
+.fn-sig code {
+  font-size: 1.15em !important;
+  font-weight: 600;
+  color: var(--color-fd-foreground);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
 }
 
 /* Sidebar separator labels (e.g. "Features") */
