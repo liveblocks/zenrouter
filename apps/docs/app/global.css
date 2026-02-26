@@ -126,6 +126,16 @@ a {
   max-height: none;
 }
 
+/* Function signature style (h3-like but not in TOC) */
+.fn-sig,
+.fn-sig code {
+  font-size: 1.15em !important;
+  font-weight: 600;
+  color: var(--color-fd-foreground);
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
 /* Sidebar separator labels (e.g. "Features") */
 aside p.inline-flex {
   font-weight: 600;

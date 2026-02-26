@@ -1,0 +1,106 @@
+---
+title: Response helpers
+description: Built-in helpers for JSON, HTML, streaming, and empty responses.
+---
+
+Handlers can return a plain object and Zen Router will serialize it as JSON with
+status `200` automatically. For other response types, use these helpers.
+
+## json
+
+<p className="fn-sig">`json(value, status?, headers?)`</p>
+
+Returns a JSON response with the correct content type.
+
+```ts
+import { json } from "@liveblocks/zenrouter";
+
+zen.route(
+  "POST /api/posts",
+
+  schema,
+
+  async ({ auth, body }) => {
+    const post = await db.createPost(body);
+    return json({ id: post.id }, 201);
+  }
+);
+```
+
+## html
+
+<p className="fn-sig">`html(content, status?, headers?)`</p>
+
+Returns an HTML response.
+
+```ts
+import { html } from "@liveblocks/zenrouter";
+
+zen.route(
+  "GET /health",
+
+  () => {
+    return html("<h1>OK</h1>");
+  }
+);
+```
+
+## abort
+
+<p className="fn-sig">`abort(status, headers?)`</p>
+
+Throws an error response. See [error handling](/docs/error-handling) for details.
+
+```ts
+import { abort } from "@liveblocks/zenrouter";
+
+abort(404); // never returns
+```
+
+## textStream
+
+<p className="fn-sig">`textStream(iterable, headers?, options?)`</p>
+
+Returns a streaming text response from a string generator. Chunks are buffered
+to reduce per-chunk overhead (default buffer size: 64 KB).
+
+```ts
+import { textStream } from "@liveblocks/zenrouter";
+
+zen.route(
+  "GET /api/stream",
+
+  () => {
+    function* generate() {
+      yield "Hello ";
+      yield "world!";
+    }
+    return textStream(generate());
+  }
+);
+```
+
+## ndjsonStream
+
+<p className="fn-sig">`ndjsonStream(iterable, headers?)`</p>
+
+Returns a streaming
+[NDJSON](https://github.com/ndjson/ndjson-spec) (Newline Delimited JSON)
+response. Each value is serialized as a single line.
+
+```ts
+import { ndjsonStream } from "@liveblocks/zenrouter";
+
+zen.route(
+  "GET /api/events",
+
+  () => {
+    function* events() {
+      yield { type: "start" };
+      yield { type: "data", value: 42 };
+      yield { type: "end" };
+    }
+    return ndjsonStream(events());
+  }
+);
+```
