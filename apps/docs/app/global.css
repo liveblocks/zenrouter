@@ -28,7 +28,7 @@ a {
   --color-fd-card: #1616180a;
   --color-fd-card-foreground: blue; /* ? */
   --color-fd-border: #16161813;
-  --color-fd-primary: #6651c2;
+  --color-fd-primary: #6e56d8;
   --color-fd-primary-foreground: yellow; /* ? */
   --color-fd-secondary: #faf9fa;
   --color-fd-secondary-foreground: red; /* ? */
@@ -59,7 +59,7 @@ a {
   --color-fd-card: #fdfcfd08;
   --color-fd-card-foreground: blue; /* ? */
   --color-fd-border: #fdfcfd12;
-  --color-fd-primary: #9f8dfc;
+  --color-fd-primary: #9884fc;
   --color-fd-primary-foreground: yellow; /* ? */
   --color-fd-secondary: #1d1d20;
   --color-fd-secondary-foreground: red; /* ? */
@@ -112,7 +112,7 @@ a {
         color: var(--lb-color-text-code-class);
       }
       span.tk-punctuation {
-        color: var(--lb-color-text-code-string);
+        color: var(--lb-color-text-code-punctuation);
       }
       span.tk-tag {
         color: var(--lb-color-text-code-tag);
