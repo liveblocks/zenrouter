@@ -10,18 +10,17 @@ import {
   CodeBlockTabsTrigger,
   Pre,
 } from "./components/codeblock";
-import { Tabs } from "./components/tabs";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
     ...defaultMdxComponents,
     Callout,
-    img: (props) => <ImageZoom {...(props as any)} />,
     CodeBlock,
     CodeBlockTab,
     CodeBlockTabs,
     CodeBlockTabsList,
     CodeBlockTabsTrigger,
+    img: (props) => <ImageZoom {...(props as any)} />,
     pre: ({ ref: _ref, ...props }) => (
       <CodeBlock {...props}>
         <Pre>{props.children}</Pre>

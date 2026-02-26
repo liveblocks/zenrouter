@@ -8,8 +8,8 @@ body {
   letter-spacing: -0.008em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --default-mono-font-family: var(--font-jetbrains-mono), ui-monospace,
-    monospace;
+  --default-mono-font-family:
+    var(--font-jetbrains-mono), ui-monospace, monospace;
 }
 
 a {
@@ -28,13 +28,15 @@ a {
   --color-fd-card: #1616180a;
   --color-fd-card-foreground: blue; /* ? */
   --color-fd-border: #16161813;
-  --color-fd-primary: #6e56d8;
+  --color-fd-primary: #6552ba;
   --color-fd-primary-foreground: yellow; /* ? */
   --color-fd-secondary: #faf9fa;
   --color-fd-secondary-foreground: #5d4bad;
   --color-fd-accent: #e8e7e9;
   --color-fd-accent-foreground: #161618;
   --color-fd-ring: #6651c2;
+
+  --code-snippet-highlight: #f3f0ff;
 
   --lb-color-text-code: #46454a;
   --lb-color-text-code-comment: #46454a80;
@@ -59,13 +61,15 @@ a {
   --color-fd-card: #fdfcfd08;
   --color-fd-card-foreground: blue; /* ? */
   --color-fd-border: #fdfcfd12;
-  --color-fd-primary: #9884fc;
+  --color-fd-primary: #9e8df3;
   --color-fd-primary-foreground: yellow; /* ? */
   --color-fd-secondary: #1d1d20;
   --color-fd-secondary-foreground: #9f8ef3;
   --color-fd-accent: #2e2e33;
   --color-fd-accent-foreground: #fdfcfd;
   --color-fd-ring: #9f8dfc;
+
+  --code-snippet-highlight: #241d3f;
 
   --lb-color-text-code: #edecee;
   --lb-color-text-code-comment: #edecee66;
@@ -144,4 +148,19 @@ aside p.inline-flex {
 /* Inline code snippets */
 .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   padding: 1px 3px !important;
+}
+
+/* Tables */
+.prose :where(table):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  background: var(--color-fd-secondary);
+}
+
+/* Code snippet highlights */
+.shiki:not(.not-fumadocs-codeblock *) .highlighted {
+  background: var(--code-snippet-highlight);
+}
+
+/* Highlighted sidebar elements */
+#nd-sidebar a[data-active="true"] {
+  font-weight: 600;
 }
