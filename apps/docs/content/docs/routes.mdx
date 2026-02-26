@@ -47,8 +47,10 @@ zen.route(
 ```
 
 All route paths are **fully qualified and
-[greppable](https://morizbuesing.com/blog/greppability-code-metric/)**. This is
-one of the [core principles](/docs/principles#maintainable).
+[greppable](https://morizbuesing.com/blog/greppability-code-metric/)**. There
+are no base prefixes, not on `ZenRouter`, not on `ZenRelay`. Every route
+definition is always the complete URL path. This is one of the [core
+principles](/docs/principles#maintainable).
 
 If a request is made to a URL that doesn’t match any route, Zen Router returns
 `404 Not Found`. If a request is made to a _path_ that exists but with a method

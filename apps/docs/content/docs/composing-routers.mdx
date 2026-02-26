@@ -38,6 +38,30 @@ app.relay("/webhooks/*", webhookRoutes);
 export default app;
 ```
 
+Routes inside each router are still **fully qualified**. The relay prefix is
+only used for dispatch. It does not strip or rewrite the URL. Each router
+receives the original, unmodified request:
+
+```ts title="src/routes/api.ts"
+const zen = new ZenRouter({ authorize });
+
+zen.route("GET /api/posts", handler);
+zen.route("GET /api/posts/<postId>", handler);
+//         ^^^^^^^^^^^^^^^^^^^^^^^^
+//         Always the full path, never relative to the relay prefix
+
+export { zen };
+```
+
+## No base prefixes
+
+There is no way to set a "base" prefix on a `ZenRouter` or `ZenRelay` that gets
+prepended to your route definitions. Every route pattern is always the
+**complete, greppable URL path**. This is [intentional](/docs/principles#maintainable).
+
+If you want to find the handler for `/api/posts`, you grep for `/api/posts`.
+No indirection, no prefix math.
+
 ## No fall-through
 
 There is **no implicit fall-through** between routers. This is a [core
