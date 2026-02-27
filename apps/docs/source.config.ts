@@ -21,6 +21,7 @@ export const docs = defineDocs({
 export default defineConfig({
   mdxOptions: {
     rehypeCodeOptions: {
+      engine: "oniguruma",
       themes: {
         light: "github-light",
         dark: "github-dark",
