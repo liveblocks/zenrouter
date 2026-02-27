@@ -1,5 +1,5 @@
 ---
-title: Zen Router
+title: Overview
 description: An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model.
 ---
 
@@ -8,21 +8,17 @@ Zen Router is an opinionated API router built by
 requests per month. It’s designed for Cloudflare Workers, Bun, Node.js, and
 other modern JavaScript runtimes.
 
-```bash tab="npm"
-npm install @liveblocks/zenrouter
-```
+## Features
 
-```bash tab="pnpm"
-pnpm add @liveblocks/zenrouter
-```
-
-```bash tab="bun"
-bun add @liveblocks/zenrouter
-```
-
-```bash tab="yarn"
-yarn add @liveblocks/zenrouter
-```
+- [Type-safe everywhere](/docs/routes). Your handler receives `{ p, q, body }`, all fully typed.
+- [Body validation](/docs/routes#body-validation). With any [Standard Schema](https://standardschema.dev/) compatible library.
+- [Authorization](/docs/authorization). Mandatory by design, opt-out for public routes.
+- [Composing routers](/docs/composing-routers). Isolate routers by auth strategy with `ZenRelay`.
+- [CORS](/docs/cors). Built-in, not bolted on.
+- [Error handling](/docs/error-handling). `abort(404)` from any handler, customizable error shapes.
+- [Response helpers](/docs/response-helpers). `json()`, `html()`, `textStream()`, and more.
+- [OpenTelemetry](/docs/opentelemetry). Automatic span attributes for matched routes.
+- [Runs anywhere](/docs/supported-runtimes). Cloudflare Workers, Bun, Node.js, and any runtime with Web `Request`/`Response`.
 
 ## Quick example
 
@@ -283,15 +279,3 @@ zen.route(
 
 export default zen;
 ```
-
-## Features
-
-- [Type-safe everywhere](/docs/routes). Your handler receives `{ p, q, body }`, all fully typed.
-- [Body validation](/docs/routes#body-validation). With any [Standard Schema](https://standardschema.dev/) compatible library.
-- [Authorization](/docs/authorization). Mandatory by design, opt-out for public routes.
-- [Composing routers](/docs/composing-routers). Isolate routers by auth strategy with `ZenRelay`.
-- [CORS](/docs/cors). Built-in, not bolted on.
-- [Error handling](/docs/error-handling). `abort(404)` from any handler, customizable error shapes.
-- [Response helpers](/docs/response-helpers). `json()`, `html()`, `textStream()`, and more.
-- [OpenTelemetry](/docs/opentelemetry). Automatic span attributes for matched routes.
-- [Runs anywhere](/docs/supported-runtimes). Cloudflare Workers, Bun, Node.js, and any runtime with Web `Request`/`Response`.

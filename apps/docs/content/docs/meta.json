@@ -1,6 +1,7 @@
 {
   "pages": [
     "index",
+    "get-started",
     "---Concepts---",
     "routes",
     "authorization",
