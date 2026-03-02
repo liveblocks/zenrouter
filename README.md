@@ -2,7 +2,7 @@
 
 <p>
   <a href="https://npmjs.org/package/@liveblocks/zenrouter"><img src="https://img.shields.io/npm/v/@liveblocks/zenrouter?style=flat&label=npm&color=c33" alt="NPM" /></a>
-  <a href="https://bundlejs.com/?q=%40liveblocks%2Fzenrouter%401.0.17&treeshake=%5B%7B+ZenRouter+%7D%5D"><img src="https://deno.bundlejs.com/badge?q=@liveblocks/zenrouter&treeshake=[{ZenRouter}]" alt="Size" /></a>
+  <a href="https://bundlejs.com/?q=%40liveblocks%2Fzenrouter%401.0.17&treeshake=%5B%7B+ZenRouter+%7D%5D"><img src="https://deno.bundlejs.com/badge?q=@liveblocks/zenrouter&treeshake=[{ZenRouter}]" /></a>
   <a href="https://github.com/liveblocks/zenrouter/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-apache2-green" alt="License: Apache 2.0" /></a>
 </p>
 
