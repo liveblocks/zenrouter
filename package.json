@@ -42,7 +42,7 @@
     "hotscript": "^1.0.13"
   },
   "devDependencies": {
-    "@arethetypeswrong/cli": "^0.17.3",
+    "@arethetypeswrong/cli": "^0.18.2",
     "@release-it/keep-a-changelog": "^7.0.1",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
@@ -50,17 +50,17 @@
     "eslint": "^8.56.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-simple-import-sort": "^12.1.0",
-    "fast-check": "^3.23.2",
-    "nanoid": "^3",
-    "prettier": "^3.4.2",
-    "publint": "^0.3.6",
+    "fast-check": "^4.5.3",
+    "nanoid": "^5",
+    "prettier": "^3.8.1",
+    "publint": "^0.3.18",
     "release-it": "^19.2.4",
-    "tsd": "^0.31.2",
-    "tsup": "^8.3.5",
+    "tsd": "^0.33.0",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.2.4",
-    "zod": "^4.1.8"
+    "vite-tsconfig-paths": "^6.1.1",
+    "vitest": "^4.0.18",
+    "zod": "^4.3.6"
   },
   "repository": {
     "type": "git",
