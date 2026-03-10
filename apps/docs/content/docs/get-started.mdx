@@ -63,7 +63,7 @@ const zen = new ZenRouter({
   },
 });
 
-export default zen;
+Bun.serve({ fetch: zen.fetch, port: 8000 });
 ```
 
 ```ts lineNumbers tab="Node.js"
@@ -139,7 +139,7 @@ zen.route(
 
 ### Define a POST route
 
-...
+Now add a second endpoint. Pass a schema to [validate the request body](/docs/routes#body-validation).
 
 ```ts lineNumbers tab="Cloudflare Workers" tab="zod"
 import { abort } from "@liveblocks/zenrouter";
