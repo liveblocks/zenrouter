@@ -122,7 +122,7 @@ zen.route(
   "GET /api/posts/<postId>",
 
   async ({ p, auth }) => {
-    const post = await db.getPost(p.postId);
+    const post = await db.getPostByUser(auth.currentUser.id, p.postId);
 
     if (!post) {
       abort(404);
