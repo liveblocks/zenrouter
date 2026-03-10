@@ -1,0 +1,204 @@
+---
+title: Get started
+description: Install Zen Router with npm, pnpm, bun, or yarn.
+---
+
+import { Step, Steps } from "fumadocs-ui/components/steps";
+
+Zen Router is an opinionated API router built by
+[Liveblocks](https://liveblocks.io), where it has been powering billions of
+requests per month. It’s designed for Cloudflare Workers, Bun, Node.js, and
+other modern JavaScript runtimes.
+
+<Steps>
+  <Step>
+
+### Install Zen Router
+
+Install the package with your package manager.
+
+```bash tab="npm"
+npm install @liveblocks/zenrouter
+```
+
+```bash tab="pnpm"
+pnpm add @liveblocks/zenrouter
+```
+
+```bash tab="bun"
+bun add @liveblocks/zenrouter
+```
+
+```bash tab="yarn"
+yarn add @liveblocks/zenrouter
+```
+
+  </Step>
+
+  <Step>
+### Create a router
+
+Create a router instance in your project.
+
+```ts lineNumbers tab="Cloudflare Workers"
+import { ZenRouter } from "@liveblocks/zenrouter";
+
+const zen = new ZenRouter({
+  authorize: async ({ req }) => {
+    // ...
+    return {};
+  },
+});
+
+export default zen;
+```
+
+```ts lineNumbers tab="Bun"
+import { ZenRouter } from "@liveblocks/zenrouter";
+
+const zen = new ZenRouter({
+  authorize: async ({ req }) => {
+    // ...
+    return {};
+  },
+});
+
+Bun.serve({ fetch: zen.fetch, port: 8000 });
+```
+
+```ts lineNumbers tab="Node.js"
+import { createServerAdapter } from "@whatwg-node/server";
+import { createServer } from "http";
+import { ZenRouter } from "@liveblocks/zenrouter";
+
+const zen = new ZenRouter({
+  authorize: async ({ req }) => {
+    // ...
+    return {};
+  },
+});
+
+const zenServer = createServerAdapter(zen.fetch);
+const httpServer = createServer(zenServer);
+
+httpServer.listen(3001);
+```
+
+  </Step>
+
+  <Step>
+
+### Authorize requests
+
+Set up an `authorize` function to [authenticate the request](/docs/authorization).
+
+```ts lineNumbers
+const zen = new ZenRouter({
+  authorize: async ({ req }) => {
+    const token = req.headers.get("Authorization");
+    const currentUser = await db.getUserByToken(token);
+
+    if (!currentUser) {
+      return false;
+    }
+
+    return { currentUser };
+  },
+});
+```
+
+</Step>
+
+  <Step>
+### Define a GET route
+
+Use `zen.route` to [define a route](/docs/routes).
+
+```ts lineNumbers tab="Cloudflare Workers"
+import { abort } from "@liveblocks/zenrouter";
+
+// Use params in your route, e.g. `postId`
+zen.route(
+  "GET /api/posts/<postId>",
+
+  async ({ p, auth }) => {
+    const post = await db.getPostByUser(auth.currentUser.id, p.postId);
+
+    if (!post) {
+      abort(404);
+    }
+
+    return { id: post.id, title: post.title };
+  }
+);
+```
+
+  </Step>
+
+  <Step>
+
+### Define a POST route
+
+Now add a second endpoint. Pass a schema to [validate the request body](/docs/routes#body-validation).
+
+```ts lineNumbers tab="Cloudflare Workers" tab="zod"
+import { abort } from "@liveblocks/zenrouter";
+import { z } from "zod";
+
+// Validate the request body with zod
+zen.route(
+  "POST /api/posts",
+
+  z.object({ title: z.string() }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+
+    if (!post.success) {
+      abort(500);
+    }
+
+    return { id: post.id, title: post.title };
+  }
+);
+```
+
+```ts lineNumbers tab="Cloudflare Workers" tab="decoders"
+import { abort } from "@liveblocks/zenrouter";
+import { object, string } from "decoders";
+
+// Validate the request body with decoders
+zen.route(
+  "POST /api/posts",
+
+  object({ title: string }),
+
+  async ({ auth, body }) => {
+    const post = await db.createPost({
+      title: body.title,
+      authorId: auth.currentUser.id,
+    });
+
+    if (!post.success) {
+      abort(500);
+    }
+
+    return { id: post.id, title: post.title };
+  }
+);
+```
+
+  </Step>
+
+  <Step>
+
+### Learn more
+
+Get started with [CORS](/docs/cors), [error handling](/docs/error-handling)...
+
+</Step>
+
+</Steps>

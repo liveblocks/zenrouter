@@ -4,7 +4,7 @@ import {
   DocsDescription,
   DocsPage,
   DocsTitle,
-} from "fumadocs-ui/layouts/docs/page";
+} from "fumadocs-ui/layouts/notebook/page";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
@@ -55,7 +55,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         ),
       }}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <DocsTitle>{page.data.title}</DocsTitle>
         <PageActions
           markdownUrl={`${page.url}.mdx`}
@@ -91,7 +91,9 @@ export async function generateMetadata(
   const isDocsHome = page.url === "/docs";
 
   return {
-    metadataBase: new URL(process.env.BASE_URL!),
+    metadataBase: new URL(
+      process.env.BASE_URL ?? "http://localhost:3000"
+    ),
     title: isDocsHome ? TITLE_DESCRIPTION : `${page.data.title} | Zen Router`,
     description: page.data.description,
     openGraph: {
