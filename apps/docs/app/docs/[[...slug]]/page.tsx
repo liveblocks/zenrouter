@@ -91,7 +91,9 @@ export async function generateMetadata(
   const isDocsHome = page.url === "/docs";
 
   return {
-    metadataBase: new URL(process.env.BASE_URL!),
+    metadataBase: new URL(
+      process.env.BASE_URL ?? "http://localhost:3000"
+    ),
     title: isDocsHome ? TITLE_DESCRIPTION : `${page.data.title} | Zen Router`,
     description: page.data.description,
     openGraph: {

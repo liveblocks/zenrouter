@@ -17,7 +17,9 @@ const jetbrainsMono = JetBrains_Mono({
 const page = source.getPage(["/docs"]);
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.BASE_URL!),
+  metadataBase: new URL(
+    process.env.BASE_URL ?? "http://localhost:3000"
+  ),
   title: TITLE_DESCRIPTION,
   description:
     "An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model. Compatible with Cloudflare Workers, Node.js, Bun, Deno, and other modern JavaScript runtimes. Built by Liveblocks.",
