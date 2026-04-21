@@ -188,32 +188,8 @@ export class ZenRouter<
     }
 
     return async (req: Request, ...rest: readonly any[]): Promise<Response> => {
-      try {
-        const resp = await this.#_tryDispatch(req, ...rest);
-        return this.#_addCorsIfNeeded(req, resp);
-      } finally {
-        // Release the incoming request body stream if the handler never
-        // consumed it (e.g. returned early via `abort()` or a guard
-        // check before reading the body).
-        //
-        // Without this, in environments like Cloudflare's Vitest pool
-        // (with per-file storage isolation), the orphaned stream surfaces
-        // as an unhandled rejection. See:
-        // https://developers.cloudflare.com/workers/testing/vitest-integration/known-issues/
-        //
-        // Defensive layering: a spec-compliant `ReadableStream.cancel()`
-        // returns a Promise (failures are rejections), so `.catch(() => {})`
-        // is enough — but we also wrap in try/catch in case any runtime
-        // diverges, because a throw in a `finally` would mask the
-        // response we just computed.
-        if (req.body && !req.bodyUsed) {
-          try {
-            req.body.cancel().catch(() => {});
-          } catch {
-            // ignore
-          }
-        }
-      }
+      const resp = await this.#_tryDispatch(req, ...rest);
+      return this.#_addCorsIfNeeded(req, resp);
     };
   }
 
