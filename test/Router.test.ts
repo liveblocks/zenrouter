@@ -953,3 +953,118 @@ describe("Error handling setup", () => {
     );
   });
 });
+
+describe("Request body stream cleanup", () => {
+  /**
+   * Builds a POST request whose body is a custom ReadableStream. Returns the
+   * request plus a counter that tracks how many times `cancel()` was called on
+   * the underlying stream source. Handlers that never consume the body should
+   * trigger the router to cancel it for them.
+   */
+  function makeRequestWithTrackedBody(url: string): {
+    req: Request;
+    cancelCalls: { count: number };
+  } {
+    const cancelCalls = { count: 0 };
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("hello"));
+        controller.close();
+      },
+      cancel() {
+        cancelCalls.count++;
+      },
+    });
+    // `duplex: "half"` is required by Node's Fetch when the body is a stream.
+    const req = new Request(url, {
+      method: "POST",
+      body,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+    return { req, cancelCalls };
+  }
+
+  test("cancels an unread request body when the handler aborts early", async () => {
+    const r = simplestRouter();
+    r.route("POST /thing", () => abort(413));
+
+    const { req, cancelCalls } = makeRequestWithTrackedBody(
+      "http://example.org/thing"
+    );
+    const resp = await r.fetch(req);
+
+    await expectResponse(resp, { error: "Payload Too Large" }, 413);
+    expect(cancelCalls.count).toBe(1);
+    expect(req.bodyUsed).toBe(true);
+  });
+
+  test("cancels an unread request body when the handler throws", async () => {
+    const konsole = captureConsole();
+
+    const r = simplestRouter();
+    r.route("POST /thing", () => {
+      throw new Error("boom");
+    });
+
+    const { req, cancelCalls } = makeRequestWithTrackedBody(
+      "http://example.org/thing"
+    );
+    const resp = await r.fetch(req);
+
+    await expectResponse(resp, { error: "Internal Server Error" }, 500);
+    expect(cancelCalls.count).toBe(1);
+    expect(konsole.error).toHaveBeenCalled();
+  });
+
+  test("does NOT cancel the body if the handler consumed it", async () => {
+    const r = simplestRouter();
+    r.route("POST /thing", async ({ req }) => {
+      await req.text();
+      return json({ ok: true });
+    });
+
+    const { req, cancelCalls } = makeRequestWithTrackedBody(
+      "http://example.org/thing"
+    );
+    const resp = await r.fetch(req);
+
+    await expectResponse(resp, { ok: true });
+    // The stream was drained by the handler; cancel was never needed.
+    expect(cancelCalls.count).toBe(0);
+  });
+
+  test("handles requests with no body (GET) without errors", async () => {
+    const r = simplestRouter();
+    r.route("GET /thing", () => json({ ok: true }));
+
+    const resp = await r.fetch(new Request("http://example.org/thing"));
+    await expectResponse(resp, { ok: true });
+  });
+
+  test("still returns the correct response when the body's cancel() rejects", async () => {
+    const r = simplestRouter();
+    r.route("POST /thing", () => abort(413));
+
+    // A stream whose cancel rejects — simulates a stream in an errored /
+    // locked state.
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode("hello"));
+        controller.close();
+      },
+      cancel() {
+        return Promise.reject(new Error("I refuse"));
+      },
+    });
+    const req = new Request("http://example.org/thing", {
+      method: "POST",
+      body,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+
+    // The rejection must be swallowed — the response we just computed
+    // (413) should come through intact.
+    const resp = await r.fetch(req);
+    await expectResponse(resp, { error: "Payload Too Large" }, 413);
+  });
+});

@@ -14,6 +14,7 @@ const config = {
   turbopack: {
     root: __dirname,
   },
+  outputFileTracingRoot: __dirname,
   serverExternalPackages: ["@takumi-rs/image-response"],
 
   reactStrictMode: true,
