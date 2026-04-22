@@ -1,2 +1,7 @@
+packages:
+  - docs
+
 allowBuilds:
   esbuild: true
+  sharp: false
+  unrs-resolver: false
