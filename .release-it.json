@@ -19,7 +19,7 @@
     "skipChecks": true
   },
   "hooks": {
-    "before:init": ["npm run build", "npm run lint"],
-    "after:bump": "npm run format -- package.json"
+    "before:init": ["pnpm run build", "pnpm run lint"],
+    "after:bump": "pnpm run format -- package.json"
   }
 }

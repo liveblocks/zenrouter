@@ -33,11 +33,12 @@
     "lint:package": "publint --strict && attw --pack",
     "test": "vitest run --color",
     "test:watch": "vitest watch --color",
-    "test:types": "npm run build && tsd",
+    "test:types": "pnpm run build && tsd",
     "release": "release-it"
   },
   "license": "Apache-2.0",
   "author": "Liveblocks Inc.",
+  "packageManager": "pnpm@10.33.0",
   "peerDependencies": {
     "hotscript": "^1.0.13"
   },

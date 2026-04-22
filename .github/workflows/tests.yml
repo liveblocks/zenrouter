@@ -14,17 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
 
       - name: Ensure no uncommitted changes
         run: |
@@ -36,13 +39,13 @@ jobs:
           fi
 
       - name: Typecheck
-        run: npx tsc --noEmit
+        run: pnpm exec tsc --noEmit
 
       - name: Type tests
-        run: npx tsd
+        run: pnpm exec tsd
 
       - name: Lint
-        run: npm run lint
+        run: pnpm run lint
 
       - name: Package lint
-        run: npm run lint:package
+        run: pnpm run lint:package
