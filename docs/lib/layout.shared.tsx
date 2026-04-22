@@ -4,7 +4,7 @@ export const gitConfig = {
   user: "liveblocks",
   repo: "zenrouter",
   branch: "main",
-  contentPath: "apps/docs/content/docs",
+  contentPath: "docs/content/docs",
 };
 
 export function baseOptions(): BaseLayoutProps {
