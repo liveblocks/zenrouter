@@ -410,7 +410,7 @@ describe("Router body validation", () => {
 
     r.route("POST /", (input) => {
       // Simply accessing the `body` without defining a decoder should fail
-      input.body;
+      void input.body;
       return { ok: true };
     });
 

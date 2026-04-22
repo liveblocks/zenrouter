@@ -237,7 +237,7 @@ export function getCorsHeaders(
   req: Request,
   opts: Partial<CorsOptions>
 ): Headers | null {
-  const options = { ...DEFAULT_CORS_OPTIONS, ...opts } as CorsOptions;
+  const options: CorsOptions = { ...DEFAULT_CORS_OPTIONS, ...opts };
   const originToSet = getCorsOrigin(options, req);
 
   if (originToSet === null) {

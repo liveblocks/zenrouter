@@ -194,7 +194,7 @@ function makePathMatcher(pattern: string, options: { exact: boolean }): RegExp {
 }
 
 export function makePrefixPathMatcher(prefix: string): RegExp {
-  pathPrefixRegex.test(prefix) || raise(`Invalid path prefix: ${prefix}`);
+  if (!pathPrefixRegex.test(prefix)) raise(`Invalid path prefix: ${prefix}`);
   prefix = prefix.slice(0, -2); // Remove the "/*" suffix
   prefix ||= "/"; // If the remaining prefix is "" (empty string), use a "/" instead
 

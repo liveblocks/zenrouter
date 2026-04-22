@@ -4,7 +4,6 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import { Metadata } from "next";
 import { TITLE_DESCRIPTION } from "./docs/[[...slug]]/page";
 import { getPageImage, source } from "@/lib/source";
-import { notFound } from "next/navigation";
 
 const inter = Inter({
   subsets: ["latin"],

@@ -153,13 +153,7 @@ export function textStream(
 ): Response {
   const source = buffered(iterable, options?.bufSize ?? 64 * KB);
   const chunks = imap(source, (s) => encoder.encode(s));
-  return new Response(
-    ReadableStream_from(chunks) as unknown as string,
-    //                          ^^^^^^^^^^^^^^^^^^^^
-    //        This ugly cast needed due to Node.js vs Cloudflare
-    //             Workers ReadableStream type mismatch :(
-    { headers }
-  );
+  return new Response(ReadableStream_from(chunks), { headers });
 }
 
 /**

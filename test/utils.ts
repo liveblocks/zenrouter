@@ -76,7 +76,7 @@ export function captureConsole(): Consolish {
   onTestFinished(error.mockRestore);
   /* eslint-enable @typescript-eslint/unbound-method */
 
-  return { log, info, warn, error } as unknown as Consolish;
+  return { log, info, warn, error };
 }
 
 /**

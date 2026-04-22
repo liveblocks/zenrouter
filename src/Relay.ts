@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import { abort, HttpError } from "~/responses/index.js";
 import { ZenRouter } from "~/Router.js";
