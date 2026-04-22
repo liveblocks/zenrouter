@@ -26,7 +26,7 @@
     "url": "https://github.com/liveblocks/zenrouter/issues"
   },
   "scripts": {
-    "dev": "tsup --watch",
+    "dev:docs": "pnpm run --filter docs dev",
     "build": "tsup",
     "format": "eslint --color --fix src/ test/; prettier --write src/ test/",
     "lint": "eslint --color src/ test/",
