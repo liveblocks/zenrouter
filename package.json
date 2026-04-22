@@ -39,7 +39,7 @@
   },
   "license": "Apache-2.0",
   "author": "Liveblocks Inc.",
-  "packageManager": "pnpm@10.33.0",
+  "packageManager": "pnpm@10.33.1",
   "peerDependencies": {
     "hotscript": "^1.0.13"
   },
