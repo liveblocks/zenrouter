@@ -392,10 +392,10 @@ export class ZenRouter<
             const schema = this.#_paramSchema[key];
             if (!schema) return value;
             const result = validateSync(schema, value);
-            if (result.issues) throw result.issues;
+            if (result.issues) throw new Error("Param validation failed");
             return result.value;
           });
-        } catch (err) {
+        } catch {
           // A malformed URI that cannot be decoded properly or a param that
           // could not be decoded properly are both Bad Requests
           return abort(400);
@@ -559,7 +559,7 @@ async function tryReadBodyAsJson(req: Request): Promise<Json | undefined> {
   try {
     const text = await req.text();
     return text === "" ? undefined : (JSON.parse(text) as Json);
-  } catch (e) {
+  } catch {
     // Invalid JSON body
     abort(400);
   }
