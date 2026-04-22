@@ -12,29 +12,30 @@
   },
   "dependencies": {
     "@radix-ui/react-tabs": "^1.1.13",
-    "@takumi-rs/image-response": "^0.68.17",
+    "@takumi-rs/image-response": "^1.0.16",
     "class-variance-authority": "^0.7.1",
     "fumadocs-core": "16.8.1",
     "fumadocs-mdx": "14.3.1",
     "fumadocs-ui": "16.8.1",
-    "lucide-react": "^0.570.0",
-    "next": "16.1.6",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "tailwind-merge": "^3.4.1"
+    "lucide-react": "^1.8.0",
+    "next": "16.2.4",
+    "react": "^19.2.5",
+    "shiki": "^4.0.2",
+    "react-dom": "^19.2.5",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.2.4",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^25.2.3",
+    "@types/node": "^25.6.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "autoprefixer": "^10.4.24",
+    "autoprefixer": "^10.5.0",
     "eslint": "^9.39.4",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.4",
     "eslint-config-prettier": "^10.1.8",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.2.1",
+    "postcss": "^8.5.10",
+    "tailwindcss": "^4.2.4",
     "typescript": "^5.9.3"
   }
 }
