@@ -1,6 +1,6 @@
 // @ts-check
 import js from "@eslint/js";
-import importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import-x";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import tseslint from "typescript-eslint";
 
@@ -19,7 +19,7 @@ export default tseslint.config(
       },
     },
     plugins: {
-      import: importPlugin,
+      "import-x": importPlugin,
       "simple-import-sort": simpleImportSort,
     },
     rules: {
@@ -38,7 +38,7 @@ export default tseslint.config(
       "@typescript-eslint/no-base-to-string": "off",
 
       // Auto-fixes for imports
-      "import/no-duplicates": "error",
+      "import-x/no-duplicates": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
