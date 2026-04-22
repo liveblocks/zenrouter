@@ -1,6 +1,6 @@
 import { createMDX } from "fumadocs-mdx/next";
 import { fileURLToPath } from "url";
-import { dirname } from "path";
+import { dirname, resolve } from "path";
 
 if (!process.env.BASE_URL) {
   throw new Error("BASE_URL environment variable is not set");
@@ -8,13 +8,19 @@ if (!process.env.BASE_URL) {
 
 const withMDX = createMDX();
 const __dirname = dirname(fileURLToPath(import.meta.url));
+// Turbopack refuses to read files outside `root`. In a pnpm monorepo, our
+// declared deps are symlinked into docs/node_modules but their actual files
+// live in <monorepo-root>/node_modules/.pnpm — so root must include that dir.
+// (Import resolution is still scoped by docs/package.json via tsconfig's
+// moduleResolution: "bundler" — this doesn't allow phantom imports.)
+const workspaceRoot = resolve(__dirname, "..");
 
 /** @type {import('next').NextConfig} */
 const config = {
   turbopack: {
-    root: __dirname,
+    root: workspaceRoot,
   },
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: workspaceRoot,
   serverExternalPackages: ["@takumi-rs/image-response"],
 
   reactStrictMode: true,
