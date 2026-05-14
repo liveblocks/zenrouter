@@ -3,6 +3,7 @@ import "./global.css";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Metadata } from "next";
 import { TITLE_DESCRIPTION } from "./docs/[[...slug]]/page";
+import { getBaseUrl } from "@/lib/base-url";
 import { getPageImage, source } from "@/lib/source";
 
 const inter = Inter({
@@ -17,7 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 const page = source.getPage(["/docs"]);
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.BASE_URL!),
+  metadataBase: getBaseUrl(),
   title: TITLE_DESCRIPTION,
   description:
     "An opinionated HTTP router with typed path params, built-in body validation, and a clean auth model. Compatible with Cloudflare Workers, Node.js, Bun, Deno, and other modern JavaScript runtimes. Built by Liveblocks.",

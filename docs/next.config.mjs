@@ -2,7 +2,7 @@ import { createMDX } from "fumadocs-mdx/next";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 
-if (!process.env.BASE_URL) {
+if (!process.env.BASE_URL && !process.env.VERCEL_URL) {
   throw new Error("BASE_URL environment variable is not set");
 }
 
