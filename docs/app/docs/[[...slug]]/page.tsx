@@ -10,6 +10,7 @@ import { getMDXComponents } from "@/mdx-components";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { PageActions } from "@/components/ai/page-actions";
+import { getBaseUrl } from "@/lib/base-url";
 import { gitConfig } from "@/lib/layout.shared";
 
 export const TITLE_DESCRIPTION =
@@ -91,7 +92,7 @@ export async function generateMetadata(
   const isDocsHome = page.url === "/docs";
 
   return {
-    metadataBase: new URL(process.env.BASE_URL!),
+    metadataBase: getBaseUrl(),
     title: isDocsHome ? TITLE_DESCRIPTION : `${page.data.title} | Zen Router`,
     description: page.data.description,
     openGraph: {
