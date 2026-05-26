@@ -35,7 +35,7 @@
     "test:watch": "vitest watch --color",
     "test:types": "vitest run --config vitest.config.typecheck.ts --color",
     "release": "release-it",
-    "postinstall": "syncpack lint"
+    "prepare": "syncpack lint"
   },
   "license": "Apache-2.0",
   "author": "Liveblocks Inc.",
