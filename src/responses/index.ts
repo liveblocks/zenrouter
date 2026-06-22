@@ -76,6 +76,20 @@ export function empty(): Response {
 }
 
 /**
+ * Return a binary response.
+ */
+export function binary(
+  value: ArrayBuffer,
+  status = 200,
+  headers?: HeadersInit
+): Response {
+  return new Response(value, {
+    status,
+    headers: { ...headers, "Content-Type": "application/octet-stream" },
+  });
+}
+
+/**
  * Return a JSON response.
  */
 export function json(
