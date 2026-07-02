@@ -1034,15 +1034,24 @@ describe("Route aliases", () => {
   });
 
   test("aliases participate in match ordering at their call site", async () => {
-    const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
-    r.route("GET /<slug>", () => json({ from: "dynamic" }));
-    r.route("GET /special", () => json({ from: "special" }));
-    // Alias registered last, so the earlier dynamic route still wins for its path
-    r.alias("GET /also-special", "GET /special");
-
+    // Alias registered *after* the catch-all → the earlier dynamic route wins
+    const late = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    late.route("GET /special", () => json({ from: "special" }));
+    late.route("GET /<slug>", () => json({ from: "dynamic" }));
+    late.alias("GET /also-special", "GET /special");
     await expectResponse(
-      await r.fetch(new Request("http://example.org/also-special")),
+      await late.fetch(new Request("http://example.org/also-special")),
       { from: "dynamic" }
+    );
+
+    // Alias registered *before* the catch-all → the alias wins
+    const early = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    early.route("GET /special", () => json({ from: "special" }));
+    early.alias("GET /also-special", "GET /special");
+    early.route("GET /<slug>", () => json({ from: "dynamic" }));
+    await expectResponse(
+      await early.fetch(new Request("http://example.org/also-special")),
+      { from: "special" }
     );
   });
 });
