@@ -8,7 +8,11 @@ import type {
   Pattern,
   RouteMatcher,
 } from "~/lib/matchers.js";
-import { routeMatcher, sortHttpVerbsInPlace } from "~/lib/matchers.js";
+import {
+  extractParamNames,
+  routeMatcher,
+  sortHttpVerbsInPlace,
+} from "~/lib/matchers.js";
 import type { OtelConfig } from "~/lib/otel.js";
 import type { StandardSchemaV1 } from "~/lib/standard-schema.js";
 import { mapv, raise } from "~/lib/utils.js";
@@ -225,6 +229,37 @@ export class ZenRouter<
       bodySchema,
       handler as RouteHandler<RC, AC, OpaqueParams, unknown>
     );
+  }
+
+  /**
+   * Registers an alias: a second route that reuses an already-registered
+   * route's handler, body schema, and auth. Useful to expose the same endpoint
+   * under multiple paths without duplicating the implementation.
+   *
+   * The target must already be registered (define it with `.route()` first),
+   * both patterns must use the same HTTP method, and both must declare an
+   * identical set of param names. Anything else is a configuration error.
+   */
+  public alias(aliasPat: Pattern, targetPat: Pattern): void {
+    const target = this.#_routes.find(([pattern]) => pattern === targetPat);
+    if (!target) {
+      raise(`Cannot alias ${JSON.stringify(aliasPat)} → ${JSON.stringify(targetPat)}: no route registered for ${JSON.stringify(targetPat)}. Define it with .route() before aliasing to it.`); // prettier-ignore
+    }
+
+    const [, targetMatcher, auth, bodySchema, handler] = target;
+    const matcher = routeMatcher(aliasPat);
+
+    if (matcher.method !== targetMatcher.method) {
+      raise(`Cannot alias ${JSON.stringify(aliasPat)} → ${JSON.stringify(targetPat)}: aliases must use the same HTTP method.`); // prettier-ignore
+    }
+
+    const aliasParams = extractParamNames(aliasPat);
+    const targetParams = extractParamNames(targetPat);
+    if (!sameNameSet(aliasParams, targetParams)) {
+      raise(`Cannot alias ${JSON.stringify(aliasPat)} → ${JSON.stringify(targetPat)}: both must declare the same route params (got {${aliasParams.join(", ")}} vs {${targetParams.join(", ")}}).`); // prettier-ignore
+    }
+
+    this.#_routes.push([aliasPat, matcher, auth, bodySchema, handler]);
   }
 
   // TODO Maybe remove this on the Router class, since it's only a pass-through method
@@ -507,6 +542,15 @@ function formatIssue(issue: StandardSchemaV1.Issue): string {
     prefix = `Value at keypath '${keys.join(".")}'`;
   }
   return `${prefix}: ${issue.message}`;
+}
+
+/**
+ * Whether two lists contain the same set of names, regardless of order.
+ */
+function sameNameSet(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  return b.every((name) => set.has(name));
 }
 
 function isPromiseLike(value: any): value is Promise<unknown> {

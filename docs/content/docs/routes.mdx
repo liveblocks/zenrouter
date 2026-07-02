@@ -217,6 +217,44 @@ If the body doesn’t match the schema, Zen Router returns
   method.
 </Callout>
 
+## Aliasing routes
+
+Sometimes the same endpoint needs to live under more than one path (a legacy URL
+kept alive next to its replacement, a versioned prefix, etc.). Rather than
+duplicating the handler — and re-deriving the same `{ ctx, auth, p, body }`
+types — register an **alias** to an existing route with `.alias()`:
+
+```ts
+// Canonical version
+zen.route(
+  "POST /api/posts",
+  z.object({ text: z.string() }),
+  async ({ p, body }) => { ... }
+);
+
+// Singular alias
+zen.alias("POST /api/post", "POST /api/posts");
+```
+
+An alias reuses the target route’s handler, body schema, and authorization. It
+is registered as a full route in its own right, so it shows up wherever routes
+are listed and takes part in [match ordering](/docs/request-lifecycle) at the
+point where `.alias()` is called — which is why you can keep all your aliases
+together (for example, at the very bottom) without changing behavior.
+
+The target must already be registered, referenced by its **exact** pattern
+string. Both patterns must use the **same HTTP method** and declare an
+**identical set of param names** (their order doesn’t matter). Anything else is
+a configuration error, thrown at setup time:
+
+```ts
+zen.alias("GET /api/posts/<postId>", "GET /posts/<id>");
+//   ❌ Config error: params differ ({roomId} vs {id})
+
+zen.alias("POST /api/posts/<id>", "GET /posts/<id>");
+//   ❌ Config error: aliases must use the same HTTP method
+```
+
 ## Query strings
 
 Query string parameters are available via `q`. They are always optional strings.

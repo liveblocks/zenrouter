@@ -202,6 +202,22 @@ export function makePrefixPathMatcher(prefix: string): RegExp {
   return makePathMatcher(prefix, { exact: false });
 }
 
+/**
+ * Extracts the declared param names (in order) from a route pattern.
+ *
+ *   'POST /rooms/<roomId>/threads/<threadId>'  ->  ['roomId', 'threadId']
+ *   'GET /health'                              ->  []
+ */
+export function extractParamNames(pattern: string): string[] {
+  const [, path] = splitMethodAndPattern(pattern);
+  const names: string[] = [];
+  for (const segment of path.slice(1).split("/")) {
+    const name = segmentAsVariable(segment);
+    if (name !== null) names.push(name);
+  }
+  return names;
+}
+
 export function routeMatcher(input: string): RouteMatcher {
   const [method, pattern] = splitMethodAndPattern(input);
   const regex = makePathMatcher(pattern, { exact: true });

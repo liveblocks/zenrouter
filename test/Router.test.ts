@@ -953,3 +953,105 @@ describe("Error handling setup", () => {
     );
   });
 });
+
+describe("Route aliases", () => {
+  function makeRouter() {
+    const r = new ZenRouter({
+      authorize: IGNORE_AUTH_FOR_THIS_TEST,
+      params: { id: numeric },
+    });
+    r.route("GET /rooms/<id>", ({ p }) => json({ id: p.id }));
+    r.route("POST /rooms/<id>", object({ name: number }), ({ p, body }) =>
+      json({ id: p.id, name: body.name })
+    );
+    return r;
+  }
+
+  test("alias reuses the target handler under a new path", async () => {
+    const r = makeRouter();
+    r.alias("GET /v2/rooms/<id>", "GET /rooms/<id>");
+
+    await expectResponse(
+      await r.fetch(new Request("http://example.org/rooms/42")),
+      { id: 42 }
+    );
+    await expectResponse(
+      await r.fetch(new Request("http://example.org/v2/rooms/42")),
+      { id: 42 }
+    );
+  });
+
+  test("alias reuses the target's body schema", async () => {
+    const r = makeRouter();
+    r.alias("POST /v2/rooms/<id>", "POST /rooms/<id>");
+
+    const req = new Request("http://example.org/v2/rooms/7", {
+      method: "POST",
+      body: JSON.stringify({ name: 99 }),
+    });
+    await expectResponse(await r.fetch(req), { id: 7, name: 99 });
+
+    // Body validation still applies to the alias
+    const bad = new Request("http://example.org/v2/rooms/7", {
+      method: "POST",
+      body: JSON.stringify({ name: "not-a-number" }),
+    });
+    await expectResponse(
+      await r.fetch(bad),
+      {
+        error: "Unprocessable Entity",
+        reason: "Value at key 'name': Must be number",
+      },
+      422
+    );
+  });
+
+  test("aliasing to an unregistered route is a config error", () => {
+    const r = makeRouter();
+    expect(() => r.alias("GET /v2/rooms/<id>", "GET /nope/<id>")).toThrow(
+      /no route registered for "GET \/nope\/<id>"/
+    );
+  });
+
+  test("aliases must use the same HTTP method", () => {
+    const r = makeRouter();
+    expect(() => r.alias("POST /v2/rooms/<id>", "GET /rooms/<id>")).toThrow(
+      /same HTTP method/
+    );
+  });
+
+  test("aliases must declare the same set of param names", () => {
+    const r = makeRouter();
+    expect(() => r.alias("GET /v2/rooms/<roomId>", "GET /rooms/<id>")).toThrow(
+      /same route params/
+    );
+  });
+
+  test("param name order does not matter", () => {
+    const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    r.route("GET /a/<x>/b/<y>", ({ p }) => json({ p }));
+    expect(() => r.alias("GET /c/<y>/d/<x>", "GET /a/<x>/b/<y>")).not.toThrow();
+  });
+
+  test("aliases participate in match ordering at their call site", async () => {
+    // Alias registered *after* the catch-all → the earlier dynamic route wins
+    const late = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    late.route("GET /special", () => json({ from: "special" }));
+    late.route("GET /<slug>", () => json({ from: "dynamic" }));
+    late.alias("GET /also-special", "GET /special");
+    await expectResponse(
+      await late.fetch(new Request("http://example.org/also-special")),
+      { from: "dynamic" }
+    );
+
+    // Alias registered *before* the catch-all → the alias wins
+    const early = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    early.route("GET /special", () => json({ from: "special" }));
+    early.alias("GET /also-special", "GET /special");
+    early.route("GET /<slug>", () => json({ from: "dynamic" }));
+    await expectResponse(
+      await early.fetch(new Request("http://example.org/also-special")),
+      { from: "special" }
+    );
+  });
+});

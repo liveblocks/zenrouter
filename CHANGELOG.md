@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+- Add `.alias()` to register a route under multiple paths without duplicating
+  the handler
+
 ## [1.1.0] - 2026-06-22
 
 - Add `binary` response
