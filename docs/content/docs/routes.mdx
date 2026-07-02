@@ -225,13 +225,15 @@ duplicating the handler — and re-deriving the same `{ ctx, auth, p, body }`
 types — register an **alias** to an existing route with `.alias()`:
 
 ```ts
+// Canonical version
 zen.route(
-  "POST /api/rooms/<roomId>/threads",
+  "POST /api/posts",
   z.object({ text: z.string() }),
   async ({ p, body }) => { ... }
 );
 
-zen.alias("POST /v2/rooms/<roomId>/threads", "POST /v2/rooms/<roomId>/thread");
+// Singular alias
+zen.alias("POST /api/post", "POST /api/posts");
 ```
 
 An alias reuses the target route’s handler, body schema, and authorization. It
@@ -246,10 +248,10 @@ string. Both patterns must use the **same HTTP method** and declare an
 a configuration error, thrown at setup time:
 
 ```ts
-zen.alias("GET /v2/rooms/<roomId>", "GET /rooms/<id>");
+zen.alias("GET /api/posts/<postId>", "GET /posts/<id>");
 //   ❌ Config error: params differ ({roomId} vs {id})
 
-zen.alias("POST /v2/rooms/<id>", "GET /rooms/<id>");
+zen.alias("POST /api/posts/<id>", "GET /posts/<id>");
 //   ❌ Config error: aliases must use the same HTTP method
 ```
 
