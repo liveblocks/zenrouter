@@ -47,7 +47,7 @@
     "@arethetypeswrong/cli": "^0.18.2",
     "@eslint/js": "^9.39.4",
     "@release-it/keep-a-changelog": "^7.0.1",
-    "decoders": "^2.9.3",
+    "decoders": "^2.11.0",
     "eslint": "^9.39.4",
     "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-simple-import-sort": "^13.0.0",
