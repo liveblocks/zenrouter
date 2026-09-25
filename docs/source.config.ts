@@ -27,6 +27,11 @@ export default defineConfig({
         dark: "github-dark",
       },
       includeExplanation: "scopeName",
+      // With includeExplanation, Shiki tokenizes every line twice and assumes
+      // both passes agree. If the time limit cuts one pass short (e.g. on a
+      // slow build machine), it crashes on the missing tokens. Code blocks are
+      // highlighted at build time only, so disable the limit.
+      tokenizeTimeLimit: 0,
       transformers: [
         ...(rehypeCodeDefaultOptions.transformers ?? []),
         shikiTokenClassTransformer(),
