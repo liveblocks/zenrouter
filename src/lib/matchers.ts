@@ -17,7 +17,6 @@ const identifierRe = /^[a-z]\w*$/;
 const pathPrefixRegex = /^\/(([\w-]+|<[\w-]+>)\/)*\*$/;
 
 export type Method = (typeof ALL_METHODS)[number];
-export type HttpVerb = (typeof ALL_HTTP_VERBS)[number];
 
 // All supported HTTP verbs, in their most natural ordering
 export const ALL_HTTP_VERBS = [
@@ -28,12 +27,6 @@ export const ALL_HTTP_VERBS = [
   "DELETE",
   "OPTIONS",
 ];
-
-export function sortHttpVerbsInPlace(verbs: HttpVerb[]): HttpVerb[] {
-  return verbs.sort(
-    (a, b) => ALL_HTTP_VERBS.indexOf(a) - ALL_HTTP_VERBS.indexOf(b)
-  );
-}
 
 //
 // Subset of ALL_HTTP_VERBS, but OPTIONS is not included. This is because Zen
@@ -124,8 +117,7 @@ const ALL: Method[] = ["GET", "POST", "PATCH", "PUT", "DELETE"];
 
 export interface RouteMatcher {
   method: Method;
-  matchMethod(req: { method?: string }): boolean;
-  matchURL(url: URL): Record<string, string> | null;
+  matchPath(pathname: string): Record<string, string> | null;
 }
 
 function segmentAsVariable(s: string): string | null {
@@ -223,11 +215,8 @@ export function routeMatcher(input: string): RouteMatcher {
   const regex = makePathMatcher(pattern, { exact: true });
   return {
     method,
-    matchMethod(req: Request): boolean {
-      return method === req.method;
-    },
-    matchURL(url: URL) {
-      const matches = url.pathname.match(regex);
+    matchPath(pathname: string) {
+      const matches = regex.exec(pathname);
       if (matches === null) {
         return null;
       }

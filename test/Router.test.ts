@@ -525,6 +525,22 @@ describe("Router automatic OPTIONS responses (without CORS)", () => {
     });
   });
 
+  test.each(["HEAD", "PATCH", "constructor", "__proto__"])(
+    "methods without any routes: %s",
+    async (method) => {
+      const resp1 = await r.fetch(
+        new Request("http://example.org/thing/foo", { method })
+      );
+      await expectResponse(resp1, { error: "Method Not Allowed" }, 405);
+      expect(resp1.headers.get("allow")).toEqual("GET, PUT, DELETE, OPTIONS");
+
+      const resp2 = await r.fetch(
+        new Request("http://example.org/nope", { method })
+      );
+      await expectResponse(resp2, { error: "Not Found" }, 404);
+    }
+  );
+
   test("responds to non-CORS OPTIONS requests", async () => {
     const resp = await r.fetch(
       new Request("http://example.org/thing/blablabla", {

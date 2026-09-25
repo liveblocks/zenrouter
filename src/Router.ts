@@ -3,15 +3,15 @@
 import type { Json, JsonObject } from "~/lib/Json.js";
 import type {
   ExtractParams,
-  HttpVerb,
   MapSchemaOutput,
+  Method,
   Pattern,
   RouteMatcher,
 } from "~/lib/matchers.js";
 import {
+  ALL_METHODS,
   extractParamNames,
   routeMatcher,
-  sortHttpVerbsInPlace,
 } from "~/lib/matchers.js";
 import type { OtelConfig } from "~/lib/otel.js";
 import type { StandardSchemaV1 } from "~/lib/standard-schema.js";
@@ -158,7 +158,9 @@ export class ZenRouter<
   readonly #_debug: boolean;
   readonly #_contextFn: (req: Request, ...args: readonly any[]) => RC;
   readonly #_defaultAuthFn: AuthFn<RC, AC>;
-  readonly #_routes: RouteTuple<RC, AC>[];
+  // Routes grouped by HTTP method, each group in registration order. Keyed by
+  // string, so it can be looked up by any incoming request method directly.
+  readonly #_routesByMethod: Map<string, RouteTuple<RC, AC>[]>;
   readonly #_paramSchema: TParams;
   readonly #_errorHandler: ErrorHandler;
   readonly #_cors: Partial<CorsOptions> | null;
@@ -175,7 +177,7 @@ export class ZenRouter<
         console.error("This request was not checked for authorization. Please configure a generic `authorize` function in the ZenRouter constructor."); // prettier-ignore
         return abort(403);
       });
-    this.#_routes = [];
+    this.#_routesByMethod = new Map();
     this.#_paramSchema = options?.params ?? ({} as TParams);
     this.#_cors = (options?.cors === true ? {} : options?.cors) || null;
     this.#_otel = options?.otel;
@@ -187,7 +189,7 @@ export class ZenRouter<
     req: Request,
     ...rest: readonly any[]
   ) => Promise<Response> {
-    if (this.#_routes.length === 0) {
+    if (this.#_routesByMethod.size === 0) {
       throw new Error("No routes configured yet. Try adding one?");
     }
 
@@ -241,7 +243,9 @@ export class ZenRouter<
    * identical set of param names. Anything else is a configuration error.
    */
   public alias(aliasPat: Pattern, targetPat: Pattern): void {
-    const target = this.#_routes.find(([pattern]) => pattern === targetPat);
+    const target = Array.from(this.#_routesByMethod.values())
+      .flat()
+      .find(([pattern]) => pattern === targetPat);
     if (!target) {
       raise(`Cannot alias ${JSON.stringify(aliasPat)} → ${JSON.stringify(targetPat)}: no route registered for ${JSON.stringify(targetPat)}. Define it with .route() before aliasing to it.`); // prettier-ignore
     }
@@ -259,7 +263,7 @@ export class ZenRouter<
       raise(`Cannot alias ${JSON.stringify(aliasPat)} → ${JSON.stringify(targetPat)}: both must declare the same route params (got {${aliasParams.join(", ")}} vs {${targetParams.join(", ")}}).`); // prettier-ignore
     }
 
-    this.#_routes.push([aliasPat, matcher, auth, bodySchema, handler]);
+    this.#_addRoute([aliasPat, matcher, auth, bodySchema, handler]);
   }
 
   // TODO Maybe remove this on the Router class, since it's only a pass-through method
@@ -301,13 +305,23 @@ export class ZenRouter<
   ): void {
     const matcher = routeMatcher(pattern);
 
-    this.#_routes.push([
+    this.#_addRoute([
       pattern,
       matcher,
       /* authFn ?? */ this.#_defaultAuthFn,
       bodySchema,
       wrap(handler),
     ]);
+  }
+
+  #_addRoute(route: RouteTuple<RC, AC>): void {
+    const method = route[1].method;
+    const routes = this.#_routesByMethod.get(method);
+    if (routes) {
+      routes.push(route);
+    } else {
+      this.#_routesByMethod.set(method, [route]);
+    }
   }
 
   /**
@@ -326,32 +340,26 @@ export class ZenRouter<
     }
   }
 
-  #_getAllowedVerbs(req: Request): string[] {
-    const url = new URL(req.url);
-
-    const verbs: Set<HttpVerb> = new Set();
-    verbs.add("OPTIONS"); // Always include OPTIONS
-
-    // Collect HTTP verbs that are valid for this URL
-    for (const [_, matcher] of this.#_routes) {
-      // If we already collected this method, avoid the regex matching
-      if (verbs.has(matcher.method)) continue;
-
-      const match = matcher.matchURL(url);
-      if (match) {
-        verbs.add(matcher.method);
-      }
-    }
-
-    return sortHttpVerbsInPlace(Array.from(verbs));
+  /**
+   * Returns the methods of all routes that match the given path, in their
+   * natural order.
+   */
+  #_getMatchingMethods(pathname: string): Method[] {
+    return ALL_METHODS.filter((method) =>
+      this.#_routesByMethod
+        .get(method)
+        ?.some(([, matcher]) => matcher.matchPath(pathname) !== null)
+    );
   }
 
   #_dispatch_OPTIONS(req: Request): Response {
+    const { pathname } = new URL(req.url);
+
     // All responses to OPTIONS requests must be 2xx
     return new Response(null, {
       status: 204,
       headers: {
-        Allow: this.#_getAllowedVerbs(req).join(", "),
+        Allow: allowHeader(this.#_getMatchingMethods(pathname)),
       },
     });
   }
@@ -374,32 +382,21 @@ export class ZenRouter<
     }
 
     const url = new URL(req.url);
+    const { pathname } = url;
     const log = this.#_debug
       ? /* istanbul ignore next */
         console.log.bind(console)
       : undefined;
-    log?.(`Trying to match ${req.method} ${url.pathname}`);
+    log?.(`Trying to match ${req.method} ${pathname}`);
 
-    // Match routes in the given order
-    let pathDidMatch = false;
-    for (const tup of this.#_routes) {
-      const [pattern, matcher, authorize, bodySchema, handler] = tup;
-
-      const match = matcher.matchURL(url);
+    // Match this method's routes in the given order
+    const routes = this.#_routesByMethod.get(req.method) ?? [];
+    for (const [pattern, matcher, authorize, bodySchema, handler] of routes) {
+      const match = matcher.matchPath(pathname);
       if (match === null) {
         log?.(`  ...against ${pattern}? ❌ No match`);
         continue;
       } else {
-        pathDidMatch = true;
-        if (!matcher.matchMethod(req)) {
-          log?.(
-            `  ...against ${pattern}? 🧐 Path matches, but method did not! ${JSON.stringify(
-              match
-            )}`
-          );
-          continue;
-        }
-
         log?.(`  ...against ${pattern}? ✅ Match! ${JSON.stringify(match)}`);
 
         // Add route pattern as span attribute
@@ -470,9 +467,10 @@ export class ZenRouter<
       }
     }
 
-    if (pathDidMatch) {
-      // If one of the paths did match, we can return a 405 error
-      return abort(405, { Allow: this.#_getAllowedVerbs(req).join(", ") });
+    // If the path matches routes for other methods, we can return a 405 error
+    const methods = this.#_getMatchingMethods(pathname);
+    if (methods.length > 0) {
+      return abort(405, { Allow: allowHeader(methods) });
     }
 
     return abort(404);
@@ -527,6 +525,13 @@ export class ZenRouter<
     const { status, body } = resp;
     return new Response(body, { status, headers });
   }
+}
+
+/**
+ * Value for the Allow header. OPTIONS is always allowed.
+ */
+function allowHeader(methods: Method[]): string {
+  return [...methods, "OPTIONS"].join(", ");
 }
 
 function formatIssue(issue: StandardSchemaV1.Issue): string {

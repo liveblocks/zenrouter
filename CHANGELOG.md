@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+**Performance:**
+
+- Faster route matching: only routes for the request's method are scanned
+
 ## [1.2.0] - 2026-07-02
 
 - Add `.alias()` to register a route under multiple paths without duplicating
