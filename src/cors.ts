@@ -277,10 +277,6 @@ export function getCorsHeaders(
       // TODO Optionally, intersect resp.headers.get('Allow') with
       // options.allowedMethods, but it won’t matter much
       headers.push([AC_METHODS, options.allowedMethods.join(", ")]);
-    } else {
-      console.log(
-        "The request's Access-Control-Request-Method header does not match allowed methods. CORS headers will not be applied."
-      );
     }
   }
 
