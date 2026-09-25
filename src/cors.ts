@@ -125,6 +125,7 @@ const DEFAULT_CORS_OPTIONS: CorsOptions = {
 
 // Output Response Headers
 export const AC_ORIGIN = "Access-Control-Allow-Origin";
+export const VARY = "Vary";
 const AC_METHODS = "Access-Control-Allow-Methods";
 const AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
 const AC_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
@@ -236,7 +237,7 @@ function getHeadersToAllow(allowed: "*" | string[], req: Request) {
 export function getCorsHeaders(
   req: Request,
   opts: Partial<CorsOptions>
-): Headers | null {
+): [name: string, value: string][] | null {
   const options: CorsOptions = { ...DEFAULT_CORS_OPTIONS, ...opts };
   const originToSet = getCorsOrigin(options, req);
 
@@ -247,13 +248,13 @@ export function getCorsHeaders(
 
   // Construct the CORS headers to put on the response
   // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin#syntax
-  const headers: Headers = new Headers();
-  headers.set(AC_ORIGIN, originToSet);
+  const headers: [name: string, value: string][] = [];
+  headers.push([AC_ORIGIN, originToSet]);
   if (options.exposeHeaders.length > 0) {
-    headers.set(AC_EXPOSE_HEADERS, options.exposeHeaders.join(", "));
+    headers.push([AC_EXPOSE_HEADERS, options.exposeHeaders.join(", ")]);
   }
   if (options.allowCredentials) {
-    headers.set(AC_CREDENTIALS, "true"); // case-sensitive
+    headers.push([AC_CREDENTIALS, "true"]); // case-sensitive
   }
 
   // This is a preflight request
@@ -268,14 +269,14 @@ export function getCorsHeaders(
     if (requestedMethod && options.allowedMethods.includes(requestedMethod)) {
       const headersToAllow = getHeadersToAllow(options.allowedHeaders, req);
       if (headersToAllow) {
-        headers.set(AC_ALLOW_HEADERS, headersToAllow.join(", "));
+        headers.push([AC_ALLOW_HEADERS, headersToAllow.join(", ")]);
       }
       if (options.maxAge) {
-        headers.set(AC_MAX_AGE, String(options.maxAge));
+        headers.push([AC_MAX_AGE, String(options.maxAge)]);
       }
       // TODO Optionally, intersect resp.headers.get('Allow') with
       // options.allowedMethods, but it won’t matter much
-      headers.set(AC_METHODS, options.allowedMethods.join(", "));
+      headers.push([AC_METHODS, options.allowedMethods.join(", ")]);
     } else {
       console.log(
         "The request's Access-Control-Request-Method header does not match allowed methods. CORS headers will not be applied."
@@ -285,10 +286,10 @@ export function getCorsHeaders(
 
   // See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin#cors_and_caching
   if (options.varyHeader) {
-    if (headers.get(AC_ORIGIN) === "*") {
+    if (originToSet === "*") {
       // Never set a Vary: Origin header if Origin is returned as "*"
     } else {
-      headers.set("Vary", "Origin");
+      headers.push([VARY, "Origin"]);
     }
   }
 

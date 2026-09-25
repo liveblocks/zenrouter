@@ -21,7 +21,7 @@ import { abort, json, ValidationError } from "~/responses/index.js";
 
 import { attachContext, lookupContext } from "./contexts.js";
 import type { CorsOptions } from "./cors.js";
-import { AC_ORIGIN, getCorsHeaders } from "./cors.js";
+import { AC_ORIGIN, getCorsHeaders, VARY } from "./cors.js";
 import type { ErrorHandlerFn } from "./ErrorHandler.js";
 import { ErrorHandler } from "./ErrorHandler.js";
 
@@ -513,7 +513,7 @@ export class ZenRouter<
     // This requires a CORS response, so let's add the headers to the returned output
     const headers = new Headers(resp.headers);
     for (const [k, v] of corsHeadersToAdd) {
-      if (k === "vary") {
+      if (k === VARY) {
         // Important to not override any existing Vary headers
         headers.append(k, v);
       } else {

@@ -10,7 +10,7 @@ const TEST_ORIGIN = "https://my-example-app.org";
 
 function configureCors(options: Partial<CorsOptions> = {}) {
   return (req: Request) => {
-    return Object.fromEntries(getCorsHeaders(req, options) ?? []);
+    return Object.fromEntries(new Headers(getCorsHeaders(req, options) ?? []));
   };
 }
 

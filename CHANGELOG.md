@@ -4,6 +4,7 @@
 
 - Faster route matching: only routes for the request's method are scanned
 - `q` is now only computed when a handler actually accesses it
+- Less per-request overhead when CORS is enabled
 
 ## [1.2.0] - 2026-07-02
 
