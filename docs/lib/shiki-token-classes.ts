@@ -33,12 +33,7 @@ export function shikiTokenClassTransformer(): ShikiTransformer {
       const segment = SEMANTIC_SCOPE_PRIORITY.find((s) => firstSegments.has(s));
       if (!segment) return;
 
-      const existing = hast.properties?.className;
-      const classes = Array.isArray(existing)
-        ? [...existing]
-        : typeof existing === "string"
-          ? existing.split(/\s+/).filter(Boolean)
-          : [];
+      const classes = [...(hast.properties?.className ?? [])];
       const tokenClass = `tk-${segment}`;
       if (!classes.includes(tokenClass)) {
         classes.push(tokenClass);
