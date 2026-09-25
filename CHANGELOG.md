@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-25
+
 **Performance:**
 
 - Faster route matching: only routes for the request's method are scanned
