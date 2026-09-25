@@ -419,8 +419,8 @@ export class ZenRouter<
         // Verify route params
         let p;
         try {
-          p = mapv(match, decodeURIComponent);
-          p = mapv(p, (value, key) => {
+          p = mapv(match, (raw, key) => {
+            const value = decodeURIComponent(raw);
             const schema = this.#_paramSchema[key];
             if (!schema) return value;
             const result = validateSync(schema, value);
@@ -434,8 +434,10 @@ export class ZenRouter<
         }
 
         // Add decoded route params as span attributes
-        for (const [key, value] of Object.entries(p)) {
-          span?.setAttribute(`zen.param.${key}`, String(value));
+        if (span) {
+          for (const [key, value] of Object.entries(p)) {
+            span.setAttribute(`zen.param.${key}`, String(value));
+          }
         }
 
         const bodyResult = bodySchema
