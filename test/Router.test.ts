@@ -253,6 +253,15 @@ describe("Basic Router", () => {
     });
   });
 
+  test("the query string is the same object on every access", async () => {
+    const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    r.route("GET /same-query", (input) =>
+      json({ same: input.q === input.q, q: input.q })
+    );
+    const req = new Request("http://example.org/same-query?a=1");
+    await expectResponse(await r.fetch(req), { same: true, q: { a: "1" } });
+  });
+
   test("can accept empty bodies", async () => {
     {
       const req = new Request("http://example.org/empty", {

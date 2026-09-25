@@ -450,11 +450,14 @@ export class ZenRouter<
         }
 
         // Decode the body
+        let q: Record<string, string> | undefined;
         const input = {
           ...base,
           auth,
           p,
-          q: Object.fromEntries(url.searchParams),
+          get q() {
+            return (q ??= Object.fromEntries(url.searchParams));
+          },
           get body() {
             if (bodyResult === null) {
               raise("Cannot access body: this endpoint did not define a body schema"); // prettier-ignore
