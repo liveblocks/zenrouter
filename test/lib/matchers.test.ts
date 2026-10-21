@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import { routeMatcher } from "~/lib/matchers.js";
 
 function _(pathname: string, base = "https://example.com") {
-  return new URL(pathname, base);
+  return new URL(pathname, base).pathname;
 }
 
 describe("routeMatcher", () => {
@@ -15,21 +15,21 @@ describe("routeMatcher", () => {
 
         (input) => {
           fc.pre(input.pathname !== "/");
-          expect(routeMatcher("GET /").matchURL(input)).toBeNull();
+          expect(routeMatcher("GET /").matchPath(input.pathname)).toBeNull();
         }
       )
     ));
 
   test("simple paths (without dynamic segments)", () => {
     expect(
-      routeMatcher("GET /").matchURL(new URL("https://example.com"))
+      routeMatcher("GET /").matchPath(new URL("https://example.com").pathname)
     ).toEqual({});
     expect(
-      routeMatcher("GET /").matchURL(new URL("https://example.com/"))
+      routeMatcher("GET /").matchPath(new URL("https://example.com/").pathname)
     ).toEqual({});
 
-    expect(routeMatcher("GET /foo").matchURL(_("/foo"))).toEqual({});
-    expect(routeMatcher("GET /foo").matchURL(_("/foo/"))).toEqual({});
+    expect(routeMatcher("GET /foo").matchPath(_("/foo"))).toEqual({});
+    expect(routeMatcher("GET /foo").matchPath(_("/foo/"))).toEqual({});
   });
 
   test.each(
@@ -44,7 +44,7 @@ describe("routeMatcher", () => {
       ["/foo/<a>/<b>", "/foo/bar/qux/baz", null],
     ]
   )("path with dynamic segment: %p %p", (pattern, input, result) => {
-    expect(routeMatcher("GET " + pattern).matchURL(_(input))).toEqual(result);
+    expect(routeMatcher("GET " + pattern).matchPath(_(input))).toEqual(result);
   });
 
   test.each([

@@ -3,14 +3,12 @@ import { describe, expect, test } from "vitest";
 import type { CorsOptions } from "~/cors.js";
 import { getCorsHeaders } from "~/cors.js";
 
-import { disableConsole } from "./utils.js";
-
 const url = "https://example.org";
 const TEST_ORIGIN = "https://my-example-app.org";
 
 function configureCors(options: Partial<CorsOptions> = {}) {
   return (req: Request) => {
-    return Object.fromEntries(getCorsHeaders(req, options) ?? []);
+    return Object.fromEntries(new Headers(getCorsHeaders(req, options) ?? []));
   };
 }
 
@@ -179,8 +177,6 @@ describe("Basic CORS responses", () => {
   });
 
   test("sends CORS headers, even for non-CORS requests (default)", () => {
-    disableConsole();
-
     const cors = configureCors({
       // These are the defaults
       // allowedOrigins: "*",
@@ -217,8 +213,6 @@ describe("Basic CORS responses", () => {
   });
 
   test("sends CORS headers, even for non-CORS requests (except when credentials, except when fixed)", () => {
-    disableConsole();
-
     const cors = configureCors({
       // These are the defaults
       allowedOrigins: ["https://fixed.org", "https://dev.fixed.org"],

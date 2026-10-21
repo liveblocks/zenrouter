@@ -253,6 +253,15 @@ describe("Basic Router", () => {
     });
   });
 
+  test("the query string is the same object on every access", async () => {
+    const r = new ZenRouter({ authorize: IGNORE_AUTH_FOR_THIS_TEST });
+    r.route("GET /same-query", (input) =>
+      json({ same: input.q === input.q, q: input.q })
+    );
+    const req = new Request("http://example.org/same-query?a=1");
+    await expectResponse(await r.fetch(req), { same: true, q: { a: "1" } });
+  });
+
   test("can accept empty bodies", async () => {
     {
       const req = new Request("http://example.org/empty", {
@@ -524,6 +533,22 @@ describe("Router automatic OPTIONS responses (without CORS)", () => {
       "content-type": "application/json; charset=utf-8",
     });
   });
+
+  test.each(["HEAD", "PATCH", "constructor", "__proto__"])(
+    "methods without any routes: %s",
+    async (method) => {
+      const resp1 = await r.fetch(
+        new Request("http://example.org/thing/foo", { method })
+      );
+      await expectResponse(resp1, { error: "Method Not Allowed" }, 405);
+      expect(resp1.headers.get("allow")).toEqual("GET, PUT, DELETE, OPTIONS");
+
+      const resp2 = await r.fetch(
+        new Request("http://example.org/nope", { method })
+      );
+      await expectResponse(resp2, { error: "Not Found" }, 404);
+    }
+  );
 
   test("responds to non-CORS OPTIONS requests", async () => {
     const resp = await r.fetch(
